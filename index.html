@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图片压缩工具 - 本地压缩,不上传</title>
+<meta name="description" content="免费在线图片压缩:压缩体积、改尺寸、转格式、批量处理。所有图片在浏览器本地处理,不会上传到任何服务器。">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <h1>🖼️ 图片压缩工具</h1>
+  <p class="tagline">图片在本地压缩,<strong>不上传</strong>,保护隐私 · 免费 · 无需注册</p>
+</header>
+
+<main class="container">
+
+  <!-- 上传区 -->
+  <section class="upload-zone" id="uploadZone" aria-label="上传图片">
+    <input type="file" id="fileInput" accept="image/*" multiple hidden>
+    <div class="upload-inner">
+      <div class="upload-icon">📤</div>
+      <p class="upload-title">点击选择图片,或拖拽到此处</p>
+      <p class="upload-hint">支持 jpg / png / webp,可多选,支持批量</p>
+      <button type="button" class="btn btn-primary" id="pickBtn">选择图片</button>
+    </div>
+  </section>
+
+  <!-- 参数面板 -->
+  <section class="panel" id="paramsPanel" hidden>
+    <h2>压缩参数</h2>
+    <div class="param-grid">
+      <div class="param">
+        <label for="qualityRange">压缩质量</label>
+        <div class="range-row">
+          <input type="range" id="qualityRange" min="10" max="100" value="70">
+          <span class="range-value" id="qualityValue">70%</span>
+        </div>
+        <p class="param-hint">越低体积越小,画质损失越大;70% 通常画质可接受</p>
+      </div>
+
+      <div class="param">
+        <label for="presetSelect">证件照规格</label>
+        <select id="presetSelect">
+          <option value="none">不使用(自由调整)</option>
+          <option value="1inch">一寸 295×413</option>
+          <option value="small1inch">小一寸 260×378</option>
+          <option value="big1inch">大一寸 390×567</option>
+          <option value="2inch">二寸 413×579</option>
+          <option value="small2inch">小二寸 413×531</option>
+          <option value="big2inch">大二寸 413×626</option>
+          <option value="idcard">身份证 358×441</option>
+          <option value="visa">美国签证 600×600</option>
+        </select>
+        <p class="param-hint hidden" id="presetHint">输出尺寸:按规格居中裁剪</p>
+
+        <label for="scaleMode">尺寸调整</label>
+        <select id="scaleMode">
+          <option value="none">不调整(仅压缩)</option>
+          <option value="width">按宽度缩放</option>
+          <option value="ratio">按比例缩放</option>
+        </select>
+        <div class="scale-inputs">
+          <div id="widthRow" class="hidden">
+            <label for="targetWidth">目标宽度(px)</label>
+            <input type="number" id="targetWidth" min="1" max="10000" value="1920" inputmode="numeric">
+          </div>
+          <div id="ratioRow" class="hidden">
+            <label for="targetRatio">缩放比例</label>
+            <input type="number" id="targetRatio" min="1" max="100" value="50" inputmode="numeric">
+            <span class="unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="param">
+        <label for="outputFormat">输出格式</label>
+        <select id="outputFormat">
+          <option value="original">保持原格式</option>
+          <option value="jpeg">jpg</option>
+          <option value="webp">webp(体积最小)</option>
+          <option value="png">png(无损,体积可能更大)</option>
+        </select>
+        <p class="param-hint">png 不支持压缩质量,转 png 时质量滑块无效</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 结果区 -->
+  <section class="results" id="resultsSection" hidden>
+    <div class="results-head">
+      <h2>处理结果</h2>
+      <div class="results-actions">
+        <span class="progress-text" id="progressText" hidden></span>
+        <button type="button" class="btn btn-secondary" id="zipBtn" hidden>⬇ 打包下载全部</button>
+      </div>
+    </div>
+    <div class="progress-bar hidden" id="progressBarWrap">
+      <div class="progress-bar-inner" id="progressBarInner"></div>
+    </div>
+    <div class="card-list" id="cardList"></div>
+  </section>
+
+  <p class="footer-note">提示:本工具完全在浏览器本地运行,图片不会上传到任何服务器,可放心使用。</p>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="compress.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

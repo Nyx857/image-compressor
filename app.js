@@ -1,0 +1,295 @@
+/* app.js - 页面交互:上传、参数、处理队列、结果渲染、批量打包 */
+
+(function () {
+  'use strict';
+
+  // ---- DOM 引用 ----
+  const $ = (id) => document.getElementById(id);
+  const uploadZone = $('uploadZone');
+  const fileInput = $('fileInput');
+  const pickBtn = $('pickBtn');
+  const paramsPanel = $('paramsPanel');
+  const resultsSection = $('resultsSection');
+  const cardList = $('cardList');
+  const zipBtn = $('zipBtn');
+  const progressText = $('progressText');
+  const progressBarWrap = $('progressBarWrap');
+  const progressBarInner = $('progressBarInner');
+  const qualityRange = $('qualityRange');
+  const qualityValue = $('qualityValue');
+  const scaleMode = $('scaleMode');
+  const targetWidth = $('targetWidth');
+  const targetRatio = $('targetRatio');
+  const widthRow = $('widthRow');
+  const ratioRow = $('ratioRow');
+  const outputFormat = $('outputFormat');
+  const presetSelect = $('presetSelect');
+  const presetHint = $('presetHint');
+
+  // ---- 证件照预设表(与 index.html 下拉一致) ----
+  const PRESETS = {
+    '1inch':      { name: '一寸',     w: 295, h: 413 },
+    'small1inch': { name: '小一寸',   w: 260, h: 378 },
+    'big1inch':   { name: '大一寸',   w: 390, h: 567 },
+    '2inch':      { name: '二寸',     w: 413, h: 579 },
+    'small2inch': { name: '小二寸',   w: 413, h: 531 },
+    'big2inch':   { name: '大二寸',   w: 413, h: 626 },
+    'idcard':     { name: '身份证',   w: 358, h: 441 },
+    'visa':       { name: '美国签证', w: 600, h: 600 }
+  };
+
+  // ---- 状态 ----
+  let files = [];          // 当前待处理的 File 列表
+  let results = [];        // 处理结果(与 files 对齐)
+  let processing = false;  // 是否正在处理
+  let debounceTimer = null;
+
+  // ---- 读取参数 ----
+  function getOptions() {
+    const preset = PRESETS[presetSelect.value] || null;
+    return {
+      quality: parseInt(qualityRange.value, 10) || 70,
+      scaleMode: preset ? 'preset' : scaleMode.value,
+      targetWidth: parseInt(targetWidth.value, 10) || 1920,
+      targetRatio: parseInt(targetRatio.value, 10) || 50,
+      outputFormat: outputFormat.value,
+      presetW: preset ? preset.w : 0,
+      presetH: preset ? preset.h : 0
+    };
+  }
+
+  // ---- 选择文件 ----
+  function addFiles(fileList) {
+    const incoming = Array.from(fileList).filter((f) => f.type.indexOf('image/') === 0);
+    const rejected = Array.from(fileList).length - incoming.length;
+    if (rejected > 0) {
+      alert('已跳过 ' + rejected + ' 个非图片文件');
+    }
+    if (incoming.length === 0) return;
+    files = files.concat(incoming);
+    results = results.concat(incoming.map(() => null));
+    paramsPanel.hidden = false;
+    resultsSection.hidden = false;
+    renderCards();
+    queueProcess();
+  }
+
+  // ---- 处理队列 ----
+  function queueProcess() {
+    if (processing) return;
+    processing = true;
+    const opts = getOptions();
+    let index = 0;
+    const total = files.length;
+
+    progressBarWrap.hidden = false;
+    progressText.hidden = false;
+    zipBtn.hidden = true;
+
+    async function next() {
+      if (index >= total) {
+        processing = false;
+        progressBarWrap.hidden = true;
+        progressText.hidden = true;
+        updateZipBtn();
+        renderCards();
+        return;
+      }
+      const i = index++;
+      progressText.textContent = '处理中 ' + i + ' / ' + total;
+      progressBarInner.style.width = Math.round((i / total) * 100) + '%';
+      try {
+        results[i] = await compressImage(files[i], opts);
+      } catch (e) {
+        results[i] = { error: e.message || '处理失败' };
+      }
+      renderCards();
+      next();
+    }
+    next();
+  }
+
+  // ---- 渲染结果卡片 ----
+  function renderCards() {
+    cardList.innerHTML = '';
+    files.forEach((file, i) => {
+      const res = results[i];
+      const card = document.createElement('div');
+      card.className = 'card' + (res && res.error ? ' error' : '');
+
+      // 缩略图(用原图本地 URL,不上传)
+      const thumbUrl = URL.createObjectURL(file);
+      const thumb = document.createElement('img');
+      thumb.className = 'card-thumb';
+      thumb.src = thumbUrl;
+      thumb.alt = file.name;
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+
+      const name = document.createElement('div');
+      name.className = 'card-name';
+      name.textContent = file.name;
+
+      const meta = document.createElement('div');
+      meta.className = 'card-meta';
+
+      const actions = document.createElement('div');
+      actions.className = 'card-actions';
+
+      if (res && res.error) {
+        meta.innerHTML = '';
+        const err = document.createElement('div');
+        err.className = 'card-err';
+        err.textContent = res.error;
+        meta.appendChild(err);
+      } else if (res) {
+        const savedPct = res.originalSize > 0
+          ? Math.max(0, Math.round((1 - res.newSize / res.originalSize) * 100)) : 0;
+        const dims = document.createElement('span');
+        dims.textContent = res.width + '×' + res.height + ' · ';
+        const sizeOld = document.createElement('span');
+        sizeOld.className = 'size-old';
+        sizeOld.textContent = formatSize(res.originalSize);
+        const arrow = document.createTextNode(' → ');
+        const sizeNew = document.createElement('span');
+        sizeNew.className = 'size-new';
+        sizeNew.textContent = formatSize(res.newSize);
+        const saved = document.createElement('span');
+        saved.className = 'saved';
+        saved.textContent = '省 ' + savedPct + '%';
+        meta.appendChild(dims);
+        meta.appendChild(sizeOld);
+        meta.appendChild(arrow);
+        meta.appendChild(sizeNew);
+        meta.appendChild(saved);
+        if (res.warning) {
+          const warn = document.createElement('div');
+          warn.className = 'card-err';
+          warn.textContent = res.warning;
+          meta.appendChild(warn);
+        }
+
+        const dl = document.createElement('button');
+        dl.className = 'btn btn-secondary';
+        dl.textContent = '⬇ 下载';
+        dl.addEventListener('click', () => downloadBlob(res.blob, res.fileName));
+        actions.appendChild(dl);
+      } else {
+        meta.textContent = '处理中…';
+      }
+
+      body.appendChild(name);
+      body.appendChild(meta);
+      card.appendChild(thumb);
+      card.appendChild(body);
+      card.appendChild(actions);
+      cardList.appendChild(card);
+    });
+  }
+
+  // ---- 下载 ----
+  function downloadBlob(blob, fileName) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
+  // ---- 批量打包 zip ----
+  function updateZipBtn() {
+    const done = results.filter((r) => r && !r.error);
+    const anyPending = results.some((r) => r === null);
+    zipBtn.hidden = !(done.length > 1 && !processing && !anyPending);
+  }
+
+  zipBtn.addEventListener('click', async () => {
+    const done = results.filter((r) => r && !r.error);
+    if (done.length === 0) return;
+    if (typeof JSZip === 'undefined') {
+      alert('批量打包组件加载失败(可能网络原因),请改用单张下载。');
+      return;
+    }
+    zipBtn.disabled = true;
+    zipBtn.textContent = '打包中…';
+    try {
+      const zip = new JSZip();
+      done.forEach((r, i) => zip.file(i + '_' + r.fileName, r.blob));
+      const blob = await zip.generateAsync({ type: 'blob' });
+      downloadBlob(blob, 'compressed-images.zip');
+    } catch (e) {
+      alert('打包失败,请改用单张下载。');
+    } finally {
+      zipBtn.disabled = false;
+      zipBtn.textContent = '⬇ 打包下载全部';
+    }
+  });
+
+  // ---- 事件绑定 ----
+  pickBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+  uploadZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+
+  ['dragover', 'dragenter'].forEach((evt) => {
+    uploadZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach((evt) => {
+    uploadZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+    });
+  });
+  uploadZone.addEventListener('drop', (e) => {
+    if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+  });
+
+  // 参数联动:缩放模式切换显示对应输入
+  function updateScaleRows() {
+    const preset = PRESETS[presetSelect.value] || null;
+    if (preset) {
+      scaleMode.disabled = true;
+      widthRow.classList.add('hidden');
+      ratioRow.classList.add('hidden');
+      presetHint.hidden = false;
+      presetHint.textContent = '输出尺寸:' + preset.w + '×' + preset.h + 'px,按规格居中裁剪';
+    } else {
+      scaleMode.disabled = false;
+      widthRow.classList.toggle('hidden', scaleMode.value !== 'width');
+      ratioRow.classList.toggle('hidden', scaleMode.value !== 'ratio');
+      presetHint.hidden = true;
+    }
+  }
+  scaleMode.addEventListener('change', updateScaleRows);
+  presetSelect.addEventListener('change', updateScaleRows);
+  updateScaleRows();
+
+  // 参数变化 → 重新处理(滑块防抖)
+  function onParamChange() {
+    qualityValue.textContent = qualityRange.value + '%';
+    if (files.length === 0) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      results = results.map(() => null);
+      renderCards();
+      queueProcess();
+    }, 300);
+  }
+  qualityRange.addEventListener('input', onParamChange);
+  scaleMode.addEventListener('change', onParamChange);
+  targetWidth.addEventListener('change', onParamChange);
+  targetRatio.addEventListener('change', onParamChange);
+  outputFormat.addEventListener('change', onParamChange);
+  presetSelect.addEventListener('change', onParamChange);
+
+  // 阻止整页拖放导致浏览器打开文件
+  ['dragover', 'drop'].forEach((evt) => {
+    window.addEventListener(evt, (e) => e.preventDefault());
+  });
+})();
