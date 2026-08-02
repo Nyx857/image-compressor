@@ -192,6 +192,19 @@ async function compressImage(file, opts) {
     case 'jpeg': mime = 'image/jpeg'; break;
     case 'webp': mime = 'image/webp'; break;
     case 'png':  mime = 'image/png';  break;
+    case 'auto': // 自动:PNG/GIF 转 webp(或 jpg)以便压缩,jpg/webp 保持
+      if (file.type === 'image/png') {
+        mime = supportsWebP() ? 'image/webp' : 'image/jpeg';
+        warning = (warning ? warning + ';' : '') + 'PNG 是无损格式压不动,已自动转为 ' + mimeToExt(mime) + ' 以便压缩';
+      } else if (isGif) {
+        mime = 'image/jpeg';
+        warning = (warning ? warning + ';' : '') + 'GIF 动态图不支持,已按静态帧转为 jpg';
+      } else if (file.type === 'image/jpeg' || file.type === 'image/webp') {
+        mime = file.type;
+      } else {
+        mime = 'image/jpeg';
+      }
+      break;
     default: // original
       if (isGif) {
         mime = 'image/jpeg';
