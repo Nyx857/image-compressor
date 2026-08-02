@@ -26,6 +26,7 @@
   const presetSelect = $('presetSelect');
   const presetHint = $('presetHint');
   const targetKB = $('targetKB');
+  const formatHint = $('formatHint');
 
   // ---- 证件照预设表(与 index.html 下拉一致) ----
   const PRESETS = {
@@ -90,8 +91,27 @@
     results = results.concat(incoming.map(() => null));
     paramsPanel.hidden = false;
     resultsSection.hidden = false;
+    updateFormatHint();
     renderCards();
     queueProcess();
+  }
+
+  // ---- 根据上传的图片格式动态更新输出格式提示 ----
+  function updateFormatHint() {
+    const types = Array.from(new Set(files.map((f) => f.type)));
+    if (types.includes('image/png')) {
+      formatHint.textContent = '你上传的是 PNG,无损格式压不动;建议保持"自动"或改选 jpg/webp';
+    } else if (types.includes('image/gif')) {
+      formatHint.textContent = '你上传了 GIF 动态图,会按静态帧转为 jpg;建议保持"自动"';
+    } else if (types.length > 1) {
+      formatHint.textContent = '你上传了多种格式,保持"自动"最省心';
+    } else if (types.includes('image/jpeg')) {
+      formatHint.textContent = '你上传的是 jpg,可以正常压缩,保持"自动"或"保持原格式"都行';
+    } else if (types.includes('image/webp')) {
+      formatHint.textContent = '你上传的是 webp,可以正常压缩';
+    } else {
+      formatHint.textContent = '选"自动"最省心,PNG 会自动转 webp 再压';
+    }
   }
 
   // ---- 处理队列 ----
