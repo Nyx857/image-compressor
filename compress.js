@@ -80,6 +80,68 @@ function canvasToBlob(canvas, mime, quality) {
 /** 解码后像素总数过大时给出警告阈值(约 40MP,超出容易触发内存压力)。 */
 const MAX_PIXELS = 40000000;
 
+/** 把图片按模式绘制到 canvas(支持普通缩放和 preset 居中裁剪)。 */
+function drawToCanvas(canvas, img, outW, outH, presetMode) {
+  const ctx = canvas.getContext('2d');
+  if (presetMode) {
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const scale = Math.max(outW / iw, outH / ih);
+    const sw = outW / scale, sh = outH / scale;
+    const sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+  } else {
+    ctx.drawImage(img, 0, 0, outW, outH);
+  }
+}
+
+/**
+ * 自动把图片压到目标大小以内:依次尝试 降质量 → 转 webp → 缩小尺寸。
+ * 返回实际达到的最小结果及策略说明。
+ */
+async function compressToTarget(img, baseW, baseH, mime, presetMode, targetBytes) {
+  const canvas = document.createElement('canvas');
+  const qSteps = [70, 50, 35, 25, 15, 10];
+  const useWebp = (mime !== 'image/webp') && supportsWebP();
+  const fmts = useWebp ? [mime, 'image/webp'] : [mime];
+  const scaleSteps = presetMode ? [1] : [1, 0.9, 0.8, 0.7, 0.6, 0.5];
+
+  let best = null;   // 所有尝试中最小的(兜底)
+  let found = null;  // 第一个达标的结果
+
+  outer:
+  for (const s of scaleSteps) {
+    const cw = Math.max(1, Math.round(baseW * s));
+    const ch = Math.max(1, Math.round(baseH * s));
+    for (const m of fmts) {
+      const qs = m === 'image/png' ? [undefined] : qSteps;
+      for (const q of qs) {
+        canvas.width = cw;
+        canvas.height = ch;
+        drawToCanvas(canvas, img, cw, ch, presetMode);
+        const blob = await canvasToBlob(canvas, m, q !== undefined ? q / 100 : undefined);
+        if (!best || blob.size < best.blob.size) {
+          best = { blob, mime: m, quality: q, w: cw, h: ch };
+        }
+        if (blob.size <= targetBytes) {
+          found = { blob, mime: m, quality: q, w: cw, h: ch };
+          break outer;
+        }
+      }
+    }
+  }
+
+  const r = found || best;
+  const strategy = [];
+  if (r.w !== baseW || r.h !== baseH) strategy.push('尺寸 ' + r.w + '×' + r.h);
+  if (r.mime !== mime) strategy.push('格式 ' + mimeToExt(r.mime));
+  if (r.quality !== undefined) strategy.push('质量 ' + r.quality + '%');
+  const targetKb = Math.round(targetBytes / 1024);
+  const warning = '目标 ≤' + targetKb + 'KB,已自动' +
+    (found ? '压缩至 ' + formatSize(r.blob.size) : '压至最小 ' + formatSize(r.blob.size) + ',仍超目标') +
+    (strategy.length ? '(' + strategy.join('、') + ')' : '');
+  return { blob: r.blob, mime: r.mime, w: r.w, h: r.h, warning };
+}
+
 /**
  * 压缩/缩放/转格式一张图片。
  * @param {File} file 原始文件
@@ -91,8 +153,9 @@ const MAX_PIXELS = 40000000;
  * @param {number} opts.presetW preset 模式的目标宽度
  * @param {number} opts.presetH preset 模式的目标高度
  * @param {string} opts.outputFormat 'original' | 'jpeg' | 'webp' | 'png'
+ * @param {number} opts.targetKB 目标大小(KB);>0 时自动压到该大小以内
  * @returns {Promise<{blob: Blob, fileName: string, width: number, height: number,
- *          originalSize: number, newSize: number, warning?: string}>}
+ *          originalSize: number, newSize: number, warning?: string, targetKB?: number}>}
  */
 async function compressImage(file, opts) {
   const originalSize = file.size;
@@ -144,6 +207,26 @@ async function compressImage(file, opts) {
   if (mime === 'image/webp' && !supportsWebP()) {
     mime = 'image/jpeg';
     warning = (warning ? warning + ';' : '') + '当前浏览器不支持 webp,已降级为 jpg';
+  }
+
+  // 目标大小模式:原图超过目标时,自动压到目标以内
+  if (opts.targetKB > 0 && originalSize > opts.targetKB * 1024) {
+    const targetBytes = opts.targetKB * 1024;
+    const r = await compressToTarget(img, outW, outH, mime, presetMode, targetBytes);
+    warning = (warning ? warning + ';' : '') + r.warning;
+    if (presetMode) {
+      warning += ';已按规格 ' + outW + '×' + outH + ' 居中裁剪';
+    }
+    return {
+      blob: r.blob,
+      fileName: changeExt(file.name, mimeToExt(r.mime)),
+      width: r.w,
+      height: r.h,
+      originalSize,
+      newSize: r.blob.size,
+      warning,
+      targetKB: opts.targetKB
+    };
   }
 
   // Canvas 重编码(png 无质量参数)

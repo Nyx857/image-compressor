@@ -27,6 +27,21 @@
     </div>
   </section>
 
+  <!-- 结果区(在参数上方,操作时可见) -->
+  <section class="results" id="resultsSection" hidden>
+    <div class="results-head">
+      <h2>处理结果</h2>
+      <div class="results-actions">
+        <span class="progress-text" id="progressText" hidden></span>
+        <button type="button" class="btn btn-secondary" id="zipBtn" hidden>⬇ 打包下载全部</button>
+      </div>
+    </div>
+    <div class="progress-bar hidden" id="progressBarWrap">
+      <div class="progress-bar-inner" id="progressBarInner"></div>
+    </div>
+    <div class="card-list" id="cardList"></div>
+  </section>
+
   <!-- 参数面板 -->
   <section class="panel" id="paramsPanel" hidden>
     <h2>压缩参数</h2>
@@ -38,6 +53,11 @@
           <span class="range-value" id="qualityValue">70%</span>
         </div>
         <p class="param-hint">越低体积越小,画质损失越大;70% 通常画质可接受</p>
+
+        <label for="targetKB">目标大小(可选)</label>
+        <input type="number" id="targetKB" min="1" max="102400" placeholder="如 200" inputmode="numeric">
+        <span class="unit">KB</span>
+        <p class="param-hint">填了目标大小(如 200),自动压到 200KB 以内并显示实际结果;留空则用手动滑块</p>
       </div>
 
       <div class="param">
@@ -85,21 +105,6 @@
         <p class="param-hint">png 不支持压缩质量,转 png 时质量滑块无效</p>
       </div>
     </div>
-  </section>
-
-  <!-- 结果区 -->
-  <section class="results" id="resultsSection" hidden>
-    <div class="results-head">
-      <h2>处理结果</h2>
-      <div class="results-actions">
-        <span class="progress-text" id="progressText" hidden></span>
-        <button type="button" class="btn btn-secondary" id="zipBtn" hidden>⬇ 打包下载全部</button>
-      </div>
-    </div>
-    <div class="progress-bar hidden" id="progressBarWrap">
-      <div class="progress-bar-inner" id="progressBarInner"></div>
-    </div>
-    <div class="card-list" id="cardList"></div>
   </section>
 
   <p class="footer-note">提示:本工具完全在浏览器本地运行,图片不会上传到任何服务器,可放心使用。</p>

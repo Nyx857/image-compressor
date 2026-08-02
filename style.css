@@ -214,6 +214,24 @@ body {
 
 .card-actions { display: flex; flex-direction: column; gap: .4rem; align-items: flex-end; }
 .card-actions .btn { padding: .45rem 1rem; font-size: .88rem; white-space: nowrap; }
+.btn-delete {
+  background: #fff;
+  color: var(--red);
+  border: 1.5px solid #f3c4c4;
+  padding: .45rem 1rem;
+  font-size: .88rem;
+}
+.btn-delete:hover { background: #fdf0f0; }
+.card-target {
+  display: inline-block;
+  margin-left: .4rem;
+  background: #eef3fe;
+  color: var(--primary-dark);
+  border-radius: 6px;
+  padding: 0 .45rem;
+  font-size: .8rem;
+  font-weight: 600;
+}
 
 /* ---- 底部提示 ---- */
 .footer-note {

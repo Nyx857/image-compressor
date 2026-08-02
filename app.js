@@ -25,6 +25,7 @@
   const outputFormat = $('outputFormat');
   const presetSelect = $('presetSelect');
   const presetHint = $('presetHint');
+  const targetKB = $('targetKB');
 
   // ---- 证件照预设表(与 index.html 下拉一致) ----
   const PRESETS = {
@@ -43,6 +44,7 @@
   let results = [];        // 处理结果(与 files 对齐)
   let processing = false;  // 是否正在处理
   let debounceTimer = null;
+  let gen = 0;             // 队列代次,删除图片时使旧队列失效
 
   // ---- 读取参数 ----
   function getOptions() {
@@ -54,8 +56,26 @@
       targetRatio: parseInt(targetRatio.value, 10) || 50,
       outputFormat: outputFormat.value,
       presetW: preset ? preset.w : 0,
-      presetH: preset ? preset.h : 0
+      presetH: preset ? preset.h : 0,
+      targetKB: parseInt(targetKB.value, 10) > 0 ? parseInt(targetKB.value, 10) : 0
     };
+  }
+
+  // ---- 删除单张图片 ----
+  function removeFile(i) {
+    files.splice(i, 1);
+    results.splice(i, 1);
+    gen++;                 // 让正在跑的处理队列立即失效
+    processing = false;
+    renderCards();
+    if (files.length > 0) {
+      queueProcess();      // 重新处理剩余未完成的
+    } else {
+      paramsPanel.hidden = true;
+      resultsSection.hidden = true;
+      progressBarWrap.hidden = true;
+      progressText.hidden = true;
+    }
   }
 
   // ---- 选择文件 ----
@@ -78,6 +98,7 @@
   function queueProcess() {
     if (processing) return;
     processing = true;
+    const myGen = ++gen;
     const opts = getOptions();
     let index = 0;
     const total = files.length;
@@ -87,6 +108,10 @@
     zipBtn.hidden = true;
 
     async function next() {
+      if (myGen !== gen) {              // 队列已被删除操作作废
+        processing = false;
+        return;
+      }
       if (index >= total) {
         processing = false;
         progressBarWrap.hidden = true;
@@ -102,6 +127,11 @@
         results[i] = await compressImage(files[i], opts);
       } catch (e) {
         results[i] = { error: e.message || '处理失败' };
+      }
+      if (myGen !== gen) {              // 处理过程中被删除
+        processing = false;
+        updateZipBtn();
+        return;
       }
       renderCards();
       next();
@@ -163,6 +193,12 @@
         meta.appendChild(arrow);
         meta.appendChild(sizeNew);
         meta.appendChild(saved);
+        if (res.targetKB) {
+          const targetBadge = document.createElement('span');
+          targetBadge.className = 'card-target';
+          targetBadge.textContent = '目标 ≤' + res.targetKB + 'KB → 实际 ' + formatSize(res.newSize);
+          meta.appendChild(targetBadge);
+        }
         if (res.warning) {
           const warn = document.createElement('div');
           warn.className = 'card-err';
@@ -178,6 +214,13 @@
       } else {
         meta.textContent = '处理中…';
       }
+
+      // 删除按钮(每张图都能单独删)
+      const del = document.createElement('button');
+      del.className = 'btn btn-delete';
+      del.textContent = '✕ 删除';
+      del.addEventListener('click', () => removeFile(i));
+      actions.appendChild(del);
 
       body.appendChild(name);
       body.appendChild(meta);
@@ -287,6 +330,7 @@
   targetRatio.addEventListener('change', onParamChange);
   outputFormat.addEventListener('change', onParamChange);
   presetSelect.addEventListener('change', onParamChange);
+  targetKB.addEventListener('input', onParamChange);
 
   // 阻止整页拖放导致浏览器打开文件
   ['dragover', 'drop'].forEach((evt) => {
