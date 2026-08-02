@@ -206,12 +206,6 @@
           meta.appendChild(warn);
         }
 
-        const dl = document.createElement('button');
-        dl.className = 'btn btn-secondary';
-        dl.textContent = '⬇ 下载';
-        dl.addEventListener('click', () => downloadBlob(res.blob, res.fileName));
-        actions.appendChild(dl);
-
         // 保存到相册(移动端走系统分享面板,可"存储图像"直达相册)
         const album = document.createElement('button');
         album.className = 'btn btn-secondary';
