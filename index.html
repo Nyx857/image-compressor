@@ -97,13 +97,13 @@
       <div class="param">
         <label for="outputFormat">输出格式</label>
         <select id="outputFormat">
-          <option value="auto" selected>自动(推荐,PNG 会自动转 webp 以便压缩)</option>
-          <option value="original">保持原格式(PNG 无法压缩,不推荐)</option>
+          <option value="auto" selected>自动(推荐)</option>
+          <option value="original" id="originalFmtOpt">保持原格式</option>
           <option value="jpeg">jpg</option>
           <option value="webp">webp(体积最小)</option>
           <option value="png">png(无损,体积可能更大)</option>
         </select>
-        <p class="param-hint" id="formatHint">PNG 是无损格式压不动;选"自动"会自动转成 webp 再压</p>
+        <p class="param-hint" id="formatHint">上传图片后会根据你的图片格式给出建议</p>
       </div>
     </div>
   </section>

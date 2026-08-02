@@ -98,19 +98,26 @@
 
   // ---- 根据上传的图片格式动态更新输出格式提示 ----
   function updateFormatHint() {
+    const originalOpt = $('originalFmtOpt');
     const types = Array.from(new Set(files.map((f) => f.type)));
     if (types.includes('image/png')) {
       formatHint.textContent = '你上传的是 PNG,无损格式压不动;建议保持"自动"或改选 jpg/webp';
+      originalOpt.textContent = '保持原格式(你的 PNG 压不动,不推荐)';
     } else if (types.includes('image/gif')) {
       formatHint.textContent = '你上传了 GIF 动态图,会按静态帧转为 jpg;建议保持"自动"';
+      originalOpt.textContent = '保持原格式(GIF 会转 jpg)';
     } else if (types.length > 1) {
       formatHint.textContent = '你上传了多种格式,保持"自动"最省心';
+      originalOpt.textContent = '保持原格式(按各自的原始格式)';
     } else if (types.includes('image/jpeg')) {
       formatHint.textContent = '你上传的是 jpg,可以正常压缩,保持"自动"或"保持原格式"都行';
+      originalOpt.textContent = '保持原格式(你的 jpg 可直接压)';
     } else if (types.includes('image/webp')) {
       formatHint.textContent = '你上传的是 webp,可以正常压缩';
+      originalOpt.textContent = '保持原格式(你的 webp 可直接压)';
     } else {
       formatHint.textContent = '选"自动"最省心,PNG 会自动转 webp 再压';
+      originalOpt.textContent = '保持原格式';
     }
   }
 
