@@ -100,10 +100,10 @@ function drawToCanvas(canvas, img, outW, outH, presetMode) {
  */
 async function compressToTarget(img, baseW, baseH, mime, presetMode, targetBytes) {
   const canvas = document.createElement('canvas');
-  const qSteps = [70, 50, 35, 25, 15, 10];
+  const qSteps = [70, 50, 35, 25, 15, 10, 5];
   const useWebp = (mime !== 'image/webp') && supportsWebP();
   const fmts = useWebp ? [mime, 'image/webp'] : [mime];
-  const scaleSteps = presetMode ? [1] : [1, 0.9, 0.8, 0.7, 0.6, 0.5];
+  const scaleSteps = presetMode ? [1] : [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2];
 
   let best = null;   // 所有尝试中最小的(兜底)
   let found = null;  // 第一个达标的结果
