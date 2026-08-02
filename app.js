@@ -289,18 +289,44 @@
     downloadBlob(blob, fileName);
   }
 
-  // ---- 批量打包 zip ----
+  // ---- 批量打包/存相册 ----
   function updateZipBtn() {
     const done = results.filter((r) => r && !r.error);
     const anyPending = results.some((r) => r === null);
-    zipBtn.hidden = !(done.length > 1 && !processing && !anyPending);
+    const show = done.length > 1 && !processing && !anyPending;
+    zipBtn.hidden = !show;
+    if (show) {
+      // 移动端支持分享多文件时,按钮改为"全部存相册"
+      let canShareAll = false;
+      try {
+        if (navigator.canShare && navigator.share && done.length <= 20) {
+          canShareAll = navigator.canShare({ files: done.map((r) => new File([r.blob], r.fileName, { type: r.blob.type })) });
+        }
+      } catch (e) { canShareAll = false; }
+      zipBtn.textContent = canShareAll ? '💾 全部存相册' : '⬇ 打包下载全部';
+    }
   }
 
   zipBtn.addEventListener('click', async () => {
     const done = results.filter((r) => r && !r.error);
     if (done.length === 0) return;
+
+    // 优先:系统分享全部图片(移动端可直接存相册)
+    try {
+      if (navigator.canShare && navigator.share) {
+        const files = done.map((r) => new File([r.blob], r.fileName, { type: r.blob.type }));
+        if (navigator.canShare({ files })) {
+          await navigator.share({ files });
+          return;
+        }
+      }
+    } catch (e) {
+      // 用户取消或分享失败,退回 zip 下载
+    }
+
+    // 退回:打包 zip 下载(桌面等不支持分享多文件的场景)
     if (typeof JSZip === 'undefined') {
-      alert('批量打包组件加载失败(可能网络原因),请改用单张下载。');
+      alert('批量打包组件加载失败(可能网络原因),请改用单张保存。');
       return;
     }
     zipBtn.disabled = true;
@@ -311,10 +337,10 @@
       const blob = await zip.generateAsync({ type: 'blob' });
       downloadBlob(blob, 'compressed-images.zip');
     } catch (e) {
-      alert('打包失败,请改用单张下载。');
+      alert('打包失败,请改用单张保存。');
     } finally {
       zipBtn.disabled = false;
-      zipBtn.textContent = '⬇ 打包下载全部';
+      updateZipBtn();
     }
   });
 
