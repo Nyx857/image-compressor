@@ -211,6 +211,13 @@
         dl.textContent = '⬇ 下载';
         dl.addEventListener('click', () => downloadBlob(res.blob, res.fileName));
         actions.appendChild(dl);
+
+        // 保存到相册(移动端走系统分享面板,可"存储图像"直达相册)
+        const album = document.createElement('button');
+        album.className = 'btn btn-secondary';
+        album.textContent = '💾 存相册';
+        album.addEventListener('click', () => saveToAlbum(res.blob, res.fileName));
+        actions.appendChild(album);
       } else {
         meta.textContent = '处理中…';
       }
@@ -241,6 +248,24 @@
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
+  // ---- 保存到相册(移动端) ----
+  // 优先用系统分享面板(Web Share API),iOS 上可"存储图像"直达相册;
+  // 不支持分享时退回普通下载(会进"文件",提示用户长按图片也能存相册)。
+  async function saveToAlbum(blob, fileName) {
+    try {
+      if (navigator.canShare && navigator.share) {
+        const file = new File([blob], fileName, { type: blob.type });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file] });
+          return;
+        }
+      }
+    } catch (e) {
+      // 用户取消分享或分享失败,退回下载
+    }
+    downloadBlob(blob, fileName);
   }
 
   // ---- 批量打包 zip ----
