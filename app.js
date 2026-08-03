@@ -40,6 +40,13 @@
     'visa':       { name: '美国签证', w: 600, h: 600 }
   };
 
+  // ---- 设备判断:手机显示"存相册",电脑显示"下载" ----
+  function isMobileDevice() {
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints > 0 && window.innerWidth < 768);
+  }
+  const IS_MOBILE = isMobileDevice();
+
   // ---- 状态 ----
   let files = [];          // 当前待处理的 File 列表
   let results = [];        // 处理结果(与 files 对齐)
@@ -233,11 +240,16 @@
           meta.appendChild(warn);
         }
 
-        // 保存到相册(移动端走系统分享面板,可"存储图像"直达相册)
+        // 保存按钮:手机走"存相册"(系统分享),电脑走"下载"
         const album = document.createElement('button');
         album.className = 'btn btn-secondary';
-        album.textContent = '💾 存相册';
-        album.addEventListener('click', () => saveToAlbum(res.blob, res.fileName));
+        if (IS_MOBILE) {
+          album.textContent = '💾 存相册';
+          album.addEventListener('click', () => saveToAlbum(res.blob, res.fileName));
+        } else {
+          album.textContent = '⬇ 下载';
+          album.addEventListener('click', () => downloadBlob(res.blob, res.fileName));
+        }
         actions.appendChild(album);
       } else {
         meta.textContent = '处理中…';
@@ -296,14 +308,7 @@
     const show = done.length > 1 && !processing && !anyPending;
     zipBtn.hidden = !show;
     if (show) {
-      // 移动端支持分享多文件时,按钮改为"全部存相册"
-      let canShareAll = false;
-      try {
-        if (navigator.canShare && navigator.share && done.length <= 20) {
-          canShareAll = navigator.canShare({ files: done.map((r) => new File([r.blob], r.fileName, { type: r.blob.type })) });
-        }
-      } catch (e) { canShareAll = false; }
-      zipBtn.textContent = canShareAll ? '💾 全部存相册' : '⬇ 打包下载全部';
+      zipBtn.textContent = IS_MOBILE ? '💾 全部存相册' : '⬇ 打包下载全部';
     }
   }
 
