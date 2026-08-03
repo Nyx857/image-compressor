@@ -181,12 +181,15 @@
       const card = document.createElement('div');
       card.className = 'card' + (res && res.error ? ' error' : '');
 
-      // 缩略图(用原图本地 URL,不上传)
-      const thumbUrl = URL.createObjectURL(file);
+      // 缩略图:处理完成后显示压缩结果图(手机长按即可保存压缩后的图)
+      const thumbUrl = res && res.blob ? URL.createObjectURL(res.blob) : URL.createObjectURL(file);
       const thumb = document.createElement('img');
       thumb.className = 'card-thumb';
       thumb.src = thumbUrl;
       thumb.alt = file.name;
+      if (IS_MOBILE && res && res.blob) {
+        thumb.title = '长按图片可保存到相册';
+      }
 
       const body = document.createElement('div');
       body.className = 'card-body';
@@ -240,17 +243,24 @@
           meta.appendChild(warn);
         }
 
-        // 保存按钮:手机走"存相册"(系统分享),电脑走"下载"
+        // 统一"下载"按钮(大厂风格,不随设备变文案):
+        // 手机点下载 → 弹系统分享(可"存储图像"进相册);电脑 → 直接下载
         const album = document.createElement('button');
         album.className = 'btn btn-secondary';
-        if (IS_MOBILE) {
-          album.textContent = '💾 存相册';
-          album.addEventListener('click', () => saveToAlbum(res.blob, res.fileName));
-        } else {
-          album.textContent = '⬇ 下载';
-          album.addEventListener('click', () => downloadBlob(res.blob, res.fileName));
-        }
+        album.textContent = '⬇ 下载';
+        album.addEventListener('click', () => {
+          if (IS_MOBILE) saveToAlbum(res.blob, res.fileName);
+          else downloadBlob(res.blob, res.fileName);
+        });
         actions.appendChild(album);
+        if (IS_MOBILE) {
+          const tip = document.createElement('div');
+          tip.className = 'card-err';
+          tip.style.fontSize = '.75rem';
+          tip.style.color = 'var(--text-muted)';
+          tip.textContent = '长按图片也可保存到相册';
+          body.appendChild(tip);
+        }
       } else {
         meta.textContent = '处理中…';
       }
@@ -308,7 +318,7 @@
     const show = done.length > 1 && !processing && !anyPending;
     zipBtn.hidden = !show;
     if (show) {
-      zipBtn.textContent = IS_MOBILE ? '💾 全部存相册' : '⬇ 打包下载全部';
+      zipBtn.textContent = '⬇ 下载全部';
     }
   }
 
