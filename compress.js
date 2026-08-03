@@ -131,6 +131,10 @@ async function compressToTarget(img, baseW, baseH, mime, presetMode, targetBytes
   }
 
   const r = found || best;
+  // 校验实际输出格式(某些浏览器 webp 编码会静默降级)
+  if (r.blob.type && r.blob.type !== r.mime) {
+    r.mime = r.blob.type;
+  }
   const strategy = [];
   if (r.w !== baseW || r.h !== baseH) strategy.push('尺寸 ' + r.w + '×' + r.h);
   if (r.mime !== mime) strategy.push('格式 ' + mimeToExt(r.mime));
@@ -267,6 +271,14 @@ async function compressImage(file, opts) {
     blob = await canvasToBlob(canvas, mime, quality);
   } catch (e) {
     throw new Error('处理失败:' + e.message + (pixels > MAX_PIXELS ? '(图片可能过大)' : ''));
+  }
+
+  // 校验实际输出格式:某些浏览器不支持 webp 编码时会静默输出其他格式
+  if (blob.type && blob.type !== mime) {
+    const actual = blob.type;
+    const actualExt = mimeToExt(actual);
+    mime = actual;
+    warning = (warning ? warning + ';' : '') + '当前浏览器不支持 ' + actualExt + ' 编码,实际输出为 ' + actualExt;
   }
 
   // 若压缩后反而更大(常见于已高度压缩的 jpg/png 小图),保留原文件
