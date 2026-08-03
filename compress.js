@@ -281,10 +281,17 @@ async function compressImage(file, opts) {
     warning = (warning ? warning + ';' : '') + '当前浏览器不支持 ' + actualExt + ' 编码,实际输出为 ' + actualExt;
   }
 
-  // 若压缩后反而更大(常见于已高度压缩的 jpg/png 小图),保留原文件
-  if (blob.size >= originalSize && mime === file.type && opts.scaleMode === 'none') {
-    blob = file;
-    warning = (warning ? warning + ';' : '') + '该图片已很紧凑,压缩后体积未减小,已保留原图';
+  // 压缩后反而更大(常见于已高度压缩/很小的图):
+  // 自动或原格式模式 → 保留原图;用户明确指定转格式 → 输出但提示
+  const explicitFmt = opts.outputFormat === 'jpeg' || opts.outputFormat === 'webp' || opts.outputFormat === 'png';
+  if (blob.size >= originalSize) {
+    if (!explicitFmt && opts.scaleMode === 'none') {
+      blob = file;
+      mime = file.type;
+      warning = (warning ? warning + ';' : '') + '该图片已很紧凑,压缩后体积未减小,已保留原图';
+    } else {
+      warning = (warning ? warning + ';' : '') + '注意:压缩后体积未减小(原图已很紧凑)';
+    }
   }
 
   return {

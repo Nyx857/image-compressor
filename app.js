@@ -326,20 +326,22 @@
     const done = results.filter((r) => r && !r.error);
     if (done.length === 0) return;
 
-    // 优先:系统分享全部图片(移动端可直接存相册)
-    try {
-      if (navigator.canShare && navigator.share) {
-        const files = done.map((r) => new File([r.blob], r.fileName, { type: r.blob.type }));
-        if (navigator.canShare({ files })) {
-          await navigator.share({ files });
-          return;
+    // 手机:系统分享全部图片(可"存储图像"进相册);桌面:直接 zip 下载
+    if (IS_MOBILE) {
+      try {
+        if (navigator.canShare && navigator.share) {
+          const files = done.map((r) => new File([r.blob], r.fileName, { type: r.blob.type }));
+          if (navigator.canShare({ files })) {
+            await navigator.share({ files });
+            return;
+          }
         }
+      } catch (e) {
+        // 用户取消或分享失败,退回 zip
       }
-    } catch (e) {
-      // 用户取消或分享失败,退回 zip 下载
     }
 
-    // 退回:打包 zip 下载(桌面等不支持分享多文件的场景)
+    // 打包 zip 下载(桌面 / 手机分享不可用时)
     if (typeof JSZip === 'undefined') {
       alert('批量打包组件加载失败(可能网络原因),请改用单张保存。');
       return;
