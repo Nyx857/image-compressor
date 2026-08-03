@@ -128,53 +128,56 @@
     }
   }
 
-  // ---- 处理队列 ----
+  // ---- 处理队列(并发 3,大幅提速) ----
   function queueProcess() {
     if (processing) return;
     processing = true;
     const myGen = ++gen;
     const opts = getOptions();
-    let index = 0;
     const total = files.length;
+    const concurrency = Math.min(3, total);
 
     progressBarWrap.hidden = false;
     progressText.hidden = false;
     zipBtn.hidden = true;
 
-    async function next() {
-      if (myGen !== gen) {              // 队列已被删除操作作废
-        processing = false;
-        return;
-      }
-      if (index >= total) {
-        processing = false;
-        progressBarWrap.hidden = true;
-        progressText.hidden = true;
-        updateZipBtn();
+    let nextIdx = 0;
+    let doneCount = 0;
+
+    async function worker() {
+      while (true) {
+        if (myGen !== gen) return;          // 被删除操作作废
+        const i = nextIdx++;
+        if (i >= total) return;
+        progressText.textContent = '处理中 ' + (doneCount + 1) + ' / ' + total;
+        try {
+          results[i] = await compressImage(files[i], opts);
+        } catch (e) {
+          results[i] = { error: e.message || '处理失败' };
+        }
+        if (myGen !== gen) return;
+        doneCount++;
+        progressBarInner.style.width = Math.round((doneCount / total) * 100) + '%';
         renderCards();
-        return;
       }
-      const i = index++;
-      progressText.textContent = '处理中 ' + i + ' / ' + total;
-      progressBarInner.style.width = Math.round((i / total) * 100) + '%';
-      try {
-        results[i] = await compressImage(files[i], opts);
-      } catch (e) {
-        results[i] = { error: e.message || '处理失败' };
-      }
-      if (myGen !== gen) {              // 处理过程中被删除
-        processing = false;
-        updateZipBtn();
-        return;
-      }
-      renderCards();
-      next();
     }
-    next();
+
+    Promise.all(Array.from({ length: concurrency }, () => worker())).then(() => {
+      if (myGen !== gen) return;
+      processing = false;
+      progressBarWrap.hidden = true;
+      progressText.hidden = true;
+      updateZipBtn();
+      renderCards();
+    });
   }
 
   // ---- 渲染结果卡片 ----
   function renderCards() {
+    // 释放旧缩略图的 blob URL,防止内存泄漏(批量多轮处理时至关重要)
+    cardList.querySelectorAll('img[src^="blob:"]').forEach((img) => {
+      try { URL.revokeObjectURL(img.src); } catch (e) { /* 忽略 */ }
+    });
     cardList.innerHTML = '';
     files.forEach((file, i) => {
       const res = results[i];

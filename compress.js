@@ -95,15 +95,42 @@ function drawToCanvas(canvas, img, outW, outH, presetMode) {
 }
 
 /**
- * 自动把图片压到目标大小以内:依次尝试 降质量 → 转 webp → 缩小尺寸。
- * 返回实际达到的最小结果及策略说明。
+ * 自动把图片压到目标大小以内:对每种尺寸/格式用"二分查找"最小尝试次数逼近目标。
+ * 典型 7~15 次编码,远少于原来最多 140 次。
  */
 async function compressToTarget(img, baseW, baseH, mime, presetMode, targetBytes) {
   const canvas = document.createElement('canvas');
-  const qSteps = [70, 50, 35, 25, 15, 10, 5];
   const useWebp = (mime !== 'image/webp') && supportsWebP();
   const fmts = useWebp ? [mime, 'image/webp'] : [mime];
-  const scaleSteps = presetMode ? [1] : [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2];
+  const scaleSteps = presetMode ? [1] : [1, 0.8, 0.6, 0.45, 0.3, 0.2];
+
+  // 对给定尺寸/格式编码一次
+  async function encode(cw, ch, m, q) {
+    canvas.width = cw;
+    canvas.height = ch;
+    drawToCanvas(canvas, img, cw, ch, presetMode);
+    return canvasToBlob(canvas, m, q !== undefined ? q / 100 : undefined);
+  }
+
+  // 二分质量:在 [5,100] 找"最大且 <= 目标"的质量
+  async function binaryQuality(cw, ch, m) {
+    let lo = 5, hi = 100, best = null, bestSize = Infinity;
+    while (lo <= hi) {
+      const mid = Math.round((lo + hi) / 2);
+      const blob = await encode(cw, ch, m, mid);
+      if (blob.size <= targetBytes) {
+        if (blob.size < bestSize) { bestSize = blob.size; best = { blob, quality: mid }; }
+        lo = mid + 1;      // 还能更大质量
+      } else {
+        hi = mid - 1;      // 质量太高,降低
+      }
+    }
+    if (!best) {           // 5% 仍超目标,取最低质量兜底
+      const blob = await encode(cw, ch, m, 5);
+      best = { blob, quality: 5 };
+    }
+    return best;
+  }
 
   let best = null;   // 所有尝试中最小的(兜底)
   let found = null;  // 第一个达标的结果
@@ -113,19 +140,13 @@ async function compressToTarget(img, baseW, baseH, mime, presetMode, targetBytes
     const cw = Math.max(1, Math.round(baseW * s));
     const ch = Math.max(1, Math.round(baseH * s));
     for (const m of fmts) {
-      const qs = m === 'image/png' ? [undefined] : qSteps;
-      for (const q of qs) {
-        canvas.width = cw;
-        canvas.height = ch;
-        drawToCanvas(canvas, img, cw, ch, presetMode);
-        const blob = await canvasToBlob(canvas, m, q !== undefined ? q / 100 : undefined);
-        if (!best || blob.size < best.blob.size) {
-          best = { blob, mime: m, quality: q, w: cw, h: ch };
-        }
-        if (blob.size <= targetBytes) {
-          found = { blob, mime: m, quality: q, w: cw, h: ch };
-          break outer;
-        }
+      const r = await binaryQuality(cw, ch, m);
+      if (!best || r.blob.size < best.blob.size) {
+        best = { blob: r.blob, mime: m, quality: r.quality, w: cw, h: ch };
+      }
+      if (r.blob.size <= targetBytes) {
+        found = { blob: r.blob, mime: m, quality: r.quality, w: cw, h: ch };
+        break outer;
       }
     }
   }
