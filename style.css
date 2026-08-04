@@ -227,6 +227,12 @@ body {
   font-size: .88rem;
 }
 .btn-delete:hover { background: #fdf0f0; }
+.btn-danger-ghost {
+  background: #fff;
+  color: var(--red);
+  border: 1.5px solid #f3c4c4;
+}
+.btn-danger-ghost:hover { background: #fdf0f0; }
 .card-target {
   display: inline-block;
   margin-left: .4rem;

@@ -12,6 +12,7 @@
   const resultsSection = $('resultsSection');
   const cardList = $('cardList');
   const zipBtn = $('zipBtn');
+  const clearBtn = $('clearBtn');
   const progressText = $('progressText');
   const progressBarWrap = $('progressBarWrap');
   const progressBarInner = $('progressBarInner');
@@ -81,6 +82,7 @@
     } else {
       paramsPanel.hidden = true;
       resultsSection.hidden = true;
+      clearBtn.hidden = true;
       progressBarWrap.hidden = true;
       progressText.hidden = true;
     }
@@ -98,6 +100,7 @@
     results = results.concat(incoming.map(() => null));
     paramsPanel.hidden = false;
     resultsSection.hidden = false;
+    clearBtn.hidden = false;
     updateFormatHint();
     renderCards();
     queueProcess();
@@ -313,6 +316,22 @@
     }
     downloadBlob(blob, fileName);
   }
+
+  // ---- 全部清除(批量一键清空) ----
+  clearBtn.addEventListener('click', () => {
+    const n = files.length;
+    if (n === 0) return;
+    if (!confirm('确定清除全部 ' + n + ' 张图片吗?')) return;
+    files = [];
+    results = [];
+    gen++;
+    processing = false;
+    renderCards();
+    paramsPanel.hidden = true;
+    resultsSection.hidden = true;
+    progressBarWrap.hidden = true;
+    progressText.hidden = true;
+  });
 
   // ---- 批量打包/存相册 ----
   function updateZipBtn() {
