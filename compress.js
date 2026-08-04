@@ -251,11 +251,12 @@ async function compressImage(file, opts) {
     warning = (warning ? warning + ';' : '') + '当前浏览器不支持 webp,已降级为 jpg';
   }
 
-  // 目标大小模式:原图超过目标时,自动压到目标以内
-  if (opts.targetKB > 0 && originalSize > opts.targetKB * 1024) {
-    const targetBytes = opts.targetKB * 1024;
+  // 目标大小模式:按目标值的 70% 压,预留相册/系统转码膨胀余量
+  if (opts.targetKB > 0 && originalSize > opts.targetKB * 1024 * 0.7) {
+    const targetBytes = Math.round(opts.targetKB * 1024 * 0.7);
     const r = await compressToTarget(img, outW, outH, mime, presetMode, targetBytes);
     warning = (warning ? warning + ';' : '') + r.warning;
+    warning += ';已按目标值的 70% 压缩,预留相册转码空间';
     if (presetMode) {
       warning += ';已按规格 ' + outW + '×' + outH + ' 居中裁剪';
     }
