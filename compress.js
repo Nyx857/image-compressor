@@ -100,8 +100,12 @@ function drawToCanvas(canvas, img, outW, outH, presetMode) {
  */
 async function compressToTarget(img, baseW, baseH, mime, presetMode, targetBytes) {
   const canvas = document.createElement('canvas');
-  const useWebp = (mime !== 'image/webp') && supportsWebP();
-  const fmts = useWebp ? [mime, 'image/webp'] : [mime];
+  // 目标大小场景:优先 jpg(相册/系统不转码,保存后体积准确);
+  // webp 体积小但 iOS 相册会转成 jpg 导致膨胀,仅作兜底
+  const fmts = [];
+  if (mime !== 'image/jpeg') fmts.push('image/jpeg');
+  if (mime !== 'image/webp' && supportsWebP()) fmts.push('image/webp');
+  if (!fmts.includes(mime)) fmts.push(mime);
   const scaleSteps = presetMode ? [1] : [1, 0.8, 0.6, 0.45, 0.3, 0.2];
 
   // 对给定尺寸/格式编码一次
