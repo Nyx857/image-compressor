@@ -78,6 +78,7 @@
     processing = false;
     renderCards();
     if (files.length > 0) {
+      clearBtn.hidden = files.length < 2;
       queueProcess();      // 重新处理剩余未完成的
     } else {
       paramsPanel.hidden = true;
@@ -100,7 +101,7 @@
     results = results.concat(incoming.map(() => null));
     paramsPanel.hidden = false;
     resultsSection.hidden = false;
-    clearBtn.hidden = false;
+    clearBtn.hidden = files.length < 2;
     updateFormatHint();
     renderCards();
     queueProcess();
