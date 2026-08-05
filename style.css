@@ -20,7 +20,7 @@
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+  font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -33,8 +33,8 @@ body {
   text-align: center;
   padding: 2.2rem 1rem 1.2rem;
 }
-.site-header h1 { font-size: 1.7rem; margin-bottom: .3rem; letter-spacing: .5px; }
-.tagline { color: var(--text-muted); font-size: .95rem; }
+.site-header h1 { font-size: 1.7rem; margin-bottom: .3rem; letter-spacing: .5px; text-wrap: balance; }
+.tagline { color: var(--text-muted); font-size: .95rem; text-wrap: balance; }
 .tagline strong { color: var(--green); }
 
 /* ---- 主容器 ---- */
@@ -71,6 +71,10 @@ body {
 }
 .btn-secondary:hover { background: #f0f5ff; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn:focus-visible {
+  outline: 3px solid rgba(37,99,235,.4);
+  outline-offset: 2px;
+}
 
 /* ---- 上传区 ---- */
 .upload-zone {
@@ -89,7 +93,7 @@ body {
   box-shadow: 0 4px 18px rgba(37,99,235,.12);
 }
 .upload-icon { font-size: 3.2rem; line-height: 1; }
-.upload-title { font-size: 1.15rem; margin: .7rem 0 .3rem; font-weight: 600; }
+.upload-title { font-size: 1.15rem; margin: .7rem 0 .3rem; font-weight: 600; text-wrap: balance; }
 .upload-hint { color: var(--text-muted); font-size: .88rem; margin-bottom: 1.1rem; }
 
 /* ---- 参数面板 ---- */
@@ -210,9 +214,10 @@ body {
   font-size: .95rem;
   word-break: break-all;
   margin-bottom: .25rem;
+  text-wrap: balance;
 }
-.card-meta { font-size: .85rem; color: var(--text-muted); }
-.card-meta .size-new { color: var(--green); font-weight: 600; }
+.card-meta { font-size: .85rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.card-meta .size-new { color: var(--green); font-weight: 600; font-variant-numeric: tabular-nums; }
 .card-meta .size-old { text-decoration: line-through; }
 .card-meta .saved { color: var(--green); font-weight: 600; margin-left: .4rem; }
 .card-err { color: var(--red); font-size: .85rem; }
@@ -250,6 +255,7 @@ body {
   color: var(--text-muted);
   font-size: .82rem;
   margin: 1.5rem 0 2rem;
+  text-wrap: balance;
 }
 
 /* ---- 小屏微调 ---- */
