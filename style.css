@@ -3,24 +3,26 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --bg: #f4f6fa;
+  /* open-design human-approachable 设计系统(Airbnb/Duolingo 系) */
+  --primary: #18a48c;        /* accent: teal */
+  --primary-dark: #12856f;
+  --primary-soft: #e3f5f1;   /* 主色浅底 */
+  --bg: #f7f9fa;             /* 冷白背景 */
   --card: #ffffff;
-  --text: #111827;
-  --text-muted: #6b7280;
-  --border: #e5e7eb;
-  --green: #16a34a;
-  --red: #dc2626;
+  --text: #2b3240;           /* 深蓝灰 */
+  --text-muted: #7a8188;
+  --border: #e4e7ea;
+  --green: #1da05e;
+  --red: #e05252;
   --radius: 14px;
-  --shadow: 0 1px 3px rgba(17,24,39,.06), 0 6px 20px rgba(17,24,39,.07);
-  --shadow-hover: 0 2px 6px rgba(17,24,39,.08), 0 10px 28px rgba(17,24,39,.10);
+  --shadow: 0 1px 2px rgba(43,50,64,.04), 0 3px 10px rgba(43,50,64,.05);
+  --shadow-hover: 0 2px 4px rgba(43,50,64,.06), 0 8px 22px rgba(43,50,64,.08);
 }
 
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-  font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+  font-family: "Avenir Next", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -61,18 +63,18 @@ body {
   color: #fff;
   font-size: 1.1rem;
   padding: .9rem 2.2rem;
-  box-shadow: 0 2px 6px rgba(37,99,235,.28);
+  box-shadow: 0 2px 6px rgba(24,164,140,.26);
 }
-.btn-primary:hover { background: var(--primary-dark); box-shadow: 0 3px 10px rgba(37,99,235,.34); }
+.btn-primary:hover { background: var(--primary-dark); box-shadow: 0 3px 10px rgba(24,164,140,.32); }
 .btn-secondary {
   background: #fff;
   color: var(--primary);
-  border: 1.5px solid #bfd0f7;
+  border: 1.5px solid #bfe8df;
 }
-.btn-secondary:hover { background: #f0f5ff; }
+.btn-secondary:hover { background: var(--primary-soft); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn:focus-visible {
-  outline: 3px solid rgba(37,99,235,.4);
+  outline: 3px solid rgba(24,164,140,.35);
   outline-offset: 2px;
 }
 
@@ -89,8 +91,8 @@ body {
 }
 .upload-zone.dragover {
   border-color: var(--primary);
-  background: #eef4ff;
-  box-shadow: 0 4px 18px rgba(37,99,235,.12);
+  background: var(--primary-soft);
+  box-shadow: 0 4px 18px rgba(24,164,140,.12);
 }
 .upload-icon { font-size: 3.2rem; line-height: 1; }
 .upload-title { font-size: 1.15rem; margin: .7rem 0 .3rem; font-weight: 600; text-wrap: balance; }
@@ -241,7 +243,7 @@ body {
 .card-target {
   display: inline-block;
   margin-left: .4rem;
-  background: #eef3fe;
+  background: var(--primary-soft);
   color: var(--primary-dark);
   border-radius: 6px;
   padding: 0 .45rem;
