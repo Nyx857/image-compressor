@@ -3,101 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#faf7f5">
 <meta name="description" content="图小 — 在线图片压缩工具。压缩、改尺寸、转格式全部在浏览器本地完成,不上传任何图片。">
 <title>图小 · 在线图片压缩</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23ff385c'/%3E%3Cpath d='M18 40 L32 26 L46 40' stroke='white' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M18 24 L32 38 L46 24' stroke='white' stroke-opacity='.45' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23e0556e'/%3E%3Cpath d='M18 40 L32 26 L46 40' stroke='white' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M18 24 L32 38 L46 24' stroke='white' stroke-opacity='.45' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
-/* ─────────────────────────────────────────────────────────────────────────
- * design-systems/airbnb/tokens.css
+/* ─────────────────────────────────────────────────────────────────────
+ * Warm Coral — low-saturation, approachable Airbnb-style token set.
  *
- * Structured token bindings for the Airbnb design system — pristine
- * Canvas White surfaces, a single Rausch coral-pink accent (#ff385c),
- * generous soft-circle radii, and Airbnb Cereal VF as the lone type
- * family. The system reads like a travel magazine that happens to be
- * an app: the interface disappears so the listings can breathe.
+ * Warm-white canvas (#faf7f5) instead of pure white; a single soft
+ * coral accent (#e0556e) reserved for the primary action; Ink-warm
+ * text (#26221f). Warm neutrals keep the tool friendly for a
+ * general, non-technical audience while photos stay the hero.
  *
- * This file pre-compiles the values described in `DESIGN.md` into the
- * schema shared with every OD design system. Agents should paste the
- * `:root { … }` block verbatim into the first `<style>` of an artifact,
- * then resolve every value via `var(--*)` from that point on.
- *
- * Schema notes (brand-specific bindings worth flagging — section
- * references point into `DESIGN.md`):
- *
- *   #Bind 1  — --bg and --surface both resolve to Canvas White
- *              (#ffffff). Airbnb cards sit directly on the page
- *              without a tonal step; separation comes from the
- *              Hairline Gray (--border) edge and from the
- *              photograph inside the card, never from a surface
- *              tint (§4 Listing Card).
- *
- *   #Bind 2  — --surface-warm binds to Soft Cloud (#f7f7f7), the
- *              brand-named subsurface tier used for footers, map
- *              wrappers, and the calendar's middle-of-range dates.
- *              A real value rather than `var(--surface)` because
- *              Airbnb publishes a distinct tier here (§2 Surface).
- *
- *   #Bind 3  — --accent-hover and --accent-active are hand-picked,
- *              NOT formula-derived. DESIGN.md §2 publishes Deep
- *              Rausch (#e00b41) as the pressed/active state.
- *              color-mix would overshoot that saturation and
- *              under-shoot the brand's gradient terminal stop,
- *              so we hand-bind both states.
- *
- *   #Bind 4  — Radius scale concentrates on the brand's signature
- *              soft-circle geometry: 8px for buttons/inputs, 14px
- *              for listing cards (the workhorse), 20px for the
- *              booking panel and hero photo frames, 9999px for
- *              the circular icon buttons and avatars that
- *              punctuate every surface (§5 Border Radius Scale).
- *
- *   #Bind 5  — --elev-raised encodes Airbnb's signature three-
- *              layer booking-panel shadow verbatim — a 2% hairline
- *              ring, a 4% short blur, and a 10% medium blur. The
- *              brand forbids single drop shadows; this stacked
- *              triple is what gives the booking panel its premium
- *              anti-aliased perimeter (§6 Depth & Elevation).
- *
- *   #Bind 6  — --focus-ring is 2px solid Ink Black (#222222), NOT
- *              the schema's accent-tinted default. DESIGN.md §6
- *              mandates this specific ring so focus reads cleanly
- *              against full-bleed colorful photography — a Rausch
- *              ring would disappear against warm sunset shots or
- *              sea-blue overlays. Pair with the 4px white
- *              separator ring at circular buttons floating on
- *              images.
- *
- *   #Bind 7  — --leading-body is 1.43 (generous). Airbnb pairs
- *              tight display leading (1.18–1.25) with notably
- *              open body leading; that two-mode rhythm is why
- *              the system reads as a travel magazine rather than
- *              a utility app (§3 Principles).
- *
- * Brand-specific extensions: none in this revision. The Plus
- * Magenta (#92174d) and Luxe Purple (#460479) product-tier accents
- * called out in DESIGN.md §2 stay inline at the tier-specific
- * components that need them; promoting them to schema slots would
- * encourage non-tier surfaces to reach for them.
+ * Roles:
+ *   --bg            page canvas, warm white
+ *   --surface       cards / elevated panels, pure white
+ *   --surface-warm  recessed fills: seg controls, hovers, hints
+ *   --fg / --fg-2   primary + secondary text (Ink-warm)
+ *   --muted         small text, ≥ 4.5:1 on both bg and surface
+ *   --border        warm hairline; --border-soft for inner rules
+ *   --accent        single coral accent, ≤ 2 visible uses / screen
+ *   --accent-hover  darkens toward the pressed tone from the brief
+ *   --accent-active #c13515, the brief's pressed coral
  * ─────────────────────────────────────────────────────────────────── */
 
 :root {
-  --bg: #ffffff;
+  --bg: #faf7f5;
   --surface: #ffffff;
-  --surface-warm: #f7f7f7;
-  --fg: #222222;
-  --fg-2: #3f3f3f;
-  --muted: #6a6a6a;
-  --meta: #929292;
-  --border: #dddddd;
-  --border-soft: #ebebeb;
-  --accent: #ff385c;
+  --surface-warm: #f1ebe4;
+  --fg: #26221f;
+  --fg-2: #4b443e;
+  --muted: #6b615a;
+  --border: #e6ddd5;
+  --border-soft: #efe8e1;
+  --accent: #e0556e;
   --accent-on: #ffffff;
-  --accent-hover: #e31c5f;
-  --accent-active: #e00b41;
-  --success: #008a05;
-  --warn: #c47700;
-  --danger: #c13515;
+  --accent-hover: #d64954;
+  --accent-active: #c13515;
+  --success: #1a7f37;
+  --warn: #b45309;
+  --danger: #b02e12;
   --font-display: "Airbnb Cereal VF", "Airbnb Cereal App", Circular, -apple-system, system-ui, "Helvetica Neue", Roboto, sans-serif;
   --font-body: "Airbnb Cereal VF", "Airbnb Cereal App", Circular, -apple-system, system-ui, "Helvetica Neue", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
@@ -109,8 +55,8 @@
   --text-2xl: 28px;
   --text-3xl: 44px;
   --text-4xl: 56px;
-  --leading-body: 1.43;
-  --leading-tight: 1.2;
+  --leading-body: 1.7;
+  --leading-tight: 1.3;
   --tracking-display: -0.02em;
   --space-1: 4px;
   --space-2: 8px;
@@ -129,7 +75,7 @@
   --radius-pill: 9999px;
   --elev-flat: none;
   --elev-ring: 0 0 0 1px var(--border);
-  --elev-raised: rgba(0, 0, 0, 0.02) 0 0 0 1px, rgba(0, 0, 0, 0.04) 0 2px 6px 0, rgba(0, 0, 0, 0.1) 0 4px 8px 0;
+  --elev-raised: rgba(38, 34, 31, 0.04) 0 0 0 1px, rgba(38, 34, 31, 0.05) 0 2px 6px 0, rgba(38, 34, 31, 0.1) 0 4px 12px 0;
   --focus-ring: 0 0 0 2px var(--fg);
   --motion-fast: 150ms;
   --motion-base: 200ms;
@@ -146,13 +92,17 @@ body {
   font-family: var(--font-body);
   font-weight: 500;
   font-size: var(--text-base);
-  line-height: 1.6;
+  line-height: var(--leading-body);
   color: var(--fg);
   background: var(--bg);
   min-height: 100vh;
 }
+@media (max-width: 599px) {
+  body { font-size: 15px; line-height: 1.75; }
+}
 .hidden { display: none !important; }
 button { font-family: inherit; }
+button, .chip, .row-item, .mtab, .seg button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
 .container {
   max-width: var(--container-max);
@@ -173,11 +123,12 @@ button { font-family: inherit; }
   position: sticky;
   top: 0;
   z-index: 40;
+  padding-top: env(safe-area-inset-top);
 }
 .nav-inner { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .nav-logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); border-radius: 8px; }
 .nav-logo:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.logo-mark { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 10px; background: var(--accent); color: #fff; }
+.logo-mark { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 10px; background: var(--accent); color: var(--accent-on); }
 .logo-mark svg { width: 20px; height: 20px; }
 .brand-name { font-size: var(--text-lg); font-weight: 700; letter-spacing: 0; }
 .brand-name em { font-style: normal; color: var(--muted); font-weight: 500; margin-left: 4px; }
@@ -200,6 +151,9 @@ button { font-family: inherit; }
 }
 .btn:active { transform: scale(0.94); }
 .btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:disabled:active { transform: none; }
+.btn:disabled:focus-visible { box-shadow: var(--focus-ring); }
 .btn-primary { background: var(--accent); color: var(--accent-on); }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-primary:active { background: var(--accent-active); }
@@ -282,46 +236,82 @@ kbd {
 
 /* ─── 工作台 ───────────────────────────────────────────────── */
 .work { padding-top: 32px; }
-@media (max-width: 1127px) { .work { padding-bottom: 96px; } }
 .work-grid { display: grid; grid-template-columns: 1fr; gap: 32px; align-items: start; }
 @media (min-width: 1128px) {
   .work-grid { grid-template-columns: 360px minmax(0, 1fr); gap: 40px; }
 }
 
-/* 移动端工具栏与底部栏 */
-.mobile-tool {
-  position: sticky; top: 80px; z-index: 30;
-  background: var(--bg);
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 12px 0; margin-bottom: 4px;
-  border-bottom: 1px solid var(--border-soft);
-}
-.mobile-tool .btn-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; }
-.mobile-tool .btn-toggle svg { width: 18px; height: 18px; }
-.tool-summary { font-size: var(--text-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
-@media (min-width: 1128px) { .mobile-tool { display: none; } }
-
-.mobile-bar {
+/* 移动端：底部标签栏工作台（图片 / 参数 / 预览） */
+.mobile-tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
-  background: var(--bg); border-top: 1px solid var(--border);
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  display: flex; align-items: center; gap: 12px;
+  display: flex;
+  height: calc(64px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--surface); border-top: 1px solid var(--border);
 }
-.mb-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.mb-saved { font-size: var(--text-sm); color: var(--fg-2); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 42%; }
-@media (min-width: 1128px) { .mobile-bar { display: none; } }
+.mtab {
+  flex: 1; min-width: 0; min-height: 44px; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  background: transparent; color: var(--muted);
+  font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+  transition: color var(--motion-fast) var(--ease-standard);
+  -webkit-tap-highlight-color: transparent;
+}
+.mtab svg { width: 22px; height: 22px; }
+.mtab.active { color: var(--fg); }
+.mtab:active { opacity: 0.7; }
+.mtab:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--fg); border-radius: 12px; }
+@media (min-width: 1128px) { .mobile-tabs { display: none; } }
+
+/* 移动端三页切换 */
+@media (max-width: 1127px) {
+  .work { padding-top: 20px; padding-bottom: calc(148px + env(safe-area-inset-bottom)); }
+  #paramsPanel, #previewPage, #resultsPage { display: none; }
+  .work.tab-params #paramsPanel { display: block; }
+  .work.tab-preview #previewPage { display: block; }
+  .work.tab-images #resultsPage { display: block; }
+  .params {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 16px 24px;
+  }
+}
+@media (min-width: 1128px) { #previewPage { display: none; } }
+
+/* 移动端结果页头部 */
+.m-results-head {
+  display: none; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 16px;
+}
+.m-results-head .m-summary { font-size: var(--text-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+.m-head-acts { display: flex; align-items: center; gap: 8px; }
+.m-head-acts .btn { min-height: 44px; }
+@media (max-width: 1127px) {
+  .m-results-head { display: flex; }
+  .m-head-acts .btn { padding: 0 14px; }
+}
+@media (min-width: 1128px) { .m-results-head { display: none; } }
+
+/* 移动端底部操作条（图片页专属，固定于标签栏上方） */
+.m-dock {
+  position: fixed; left: 0; right: 0; z-index: 49;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--bg); border-top: 1px solid var(--border);
+  padding: 10px 16px;
+}
+.m-dock .m-saved { font-size: 13px; color: var(--fg-2); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-dock .btn { flex: none; }
+@media (min-width: 1128px) { .m-dock { display: none; } }
 
 /* 参数面板 */
 .params { background: var(--surface); }
 @media (min-width: 1128px) {
   .params { position: sticky; top: 96px; border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--elev-raised); padding: 24px; }
 }
-.params-body { display: none; }
-.params.open .params-body { display: block; }
-@media (min-width: 1128px) { .params-body { display: block !important; } }
-.params-head { display: none; align-items: baseline; justify-content: space-between; gap: 12px; }
-.params.open .params-head { display: flex; margin-bottom: 20px; }
-@media (min-width: 1128px) { .params-head { display: flex; margin-bottom: 0; } }
+.params-body { display: block; }
+.params-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+@media (min-width: 1128px) { .params-head { margin-bottom: 0; } }
 .params-head h2 { font-size: var(--text-xl); font-weight: 700; letter-spacing: 0; line-height: 1.3; }
 .p-section { padding: 20px 0; border-top: 1px solid var(--border-soft); }
 .p-section:first-of-type { padding-top: 4px; border-top: none; }
@@ -442,6 +432,82 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
 .grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
 @media (min-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1127px) { .grid { display: none; } }
+
+/* 移动端结果列表行 */
+.list { display: none; flex-direction: column; }
+@media (max-width: 1127px) { .list { display: flex; } }
+.row-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+.row-item:last-of-type { border-bottom: none; }
+.row-item:hover { background: rgba(241, 235, 228, 0.55); }
+.row-item.selected { background: var(--surface-warm); }
+.row-item:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--fg); }
+.ri-thumb {
+  position: relative; flex: none;
+  width: 64px; height: 64px; border-radius: var(--radius-md); overflow: hidden;
+  background: var(--surface-warm); border: 1px solid var(--border);
+}
+.ri-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ri-thumb .ri-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+.ri-thumb .ri-ph svg { width: 20px; height: 20px; }
+.ri-badge {
+  position: absolute; left: 6px; top: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.03em;
+  color: var(--surface); background: rgba(38, 34, 31, 0.72);
+  padding: 2px 7px; border-radius: var(--radius-pill);
+}
+.ri-thumb .ph-progress { align-items: flex-end; }
+.ri-thumb .ph-progress .progress { margin: 0 8px 8px; }
+.ri-main { flex: 1; min-width: 0; }
+.ri-name {
+  font-size: 15px; font-weight: 600; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.4;
+}
+.ri-sub { margin-top: 2px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.ri-sizes { margin-top: 5px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-variant-numeric: tabular-nums; }
+.ri-sizes .ri-old { color: var(--muted); font-size: 12px; text-decoration: line-through; }
+.ri-sizes .ri-new { color: var(--fg); font-size: 15px; font-weight: 700; }
+.ri-sizes .badge { font-size: 11px; padding: 3px 8px; }
+.ri-state { font-size: 12px; color: var(--muted); }
+.ri-err { font-size: 12px; color: var(--danger); }
+.ri-err .link { font-size: 12px; }
+.ri-acts { display: flex; flex-direction: column; gap: 2px; flex: none; }
+
+/* 移动端预览页 */
+.m-preview { display: none; flex-direction: column; }
+.m-preview-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.m-compare { width: 168px; flex: none; }
+.m-preview-count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.m-preview-stage {
+  position: relative; height: clamp(280px, 46dvh, 480px); border-radius: var(--radius-lg);
+  background: var(--surface-warm); border: 1px solid var(--border);
+  display: grid; place-items: center; overflow: hidden;
+}
+.m-preview-stage img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.m-preview-stage .m-ph { color: var(--muted); }
+.m-preview-stage .m-ph svg { width: 44px; height: 44px; }
+.m-preview-stage .ph-error { border-radius: var(--radius-lg); }
+.m-preview-stage .ph-progress { background: rgba(241, 235, 228, 0.6); }
+.m-preview-meta { padding-top: 16px; }
+.m-preview-meta .ri-name { font-size: 17px; }
+.m-preview-meta .ri-sub { font-size: 13px; margin-top: 4px; }
+.m-preview-meta .ri-sizes { margin-top: 8px; }
+.m-preview-meta .ri-sizes .ri-old { font-size: 13px; }
+.m-preview-meta .ri-sizes .ri-new { font-size: 17px; }
+.m-preview-acts { display: flex; gap: 10px; margin-top: 20px; }
+.m-preview-acts .btn { flex: 1; min-width: 0; min-height: 48px; padding: 0 14px; }
+.m-preview-acts .btn svg { width: 18px; height: 18px; }
+@media (max-width: 599px) {
+  .m-preview-acts .btn-secondary svg { display: none; }
+}
 
 /* 图片卡片 */
 .img-card { border-radius: var(--radius-md); }
@@ -481,7 +547,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
 .compare .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--fg); }
 .ph-error {
   position: absolute; inset: 0; display: grid; place-items: center;
-  background: rgba(247, 247, 247, 0.88); color: var(--danger);
+  background: rgba(241, 235, 228, 0.92); color: var(--danger);
   font-size: var(--text-sm); font-weight: 500;
 }
 .meta { padding-top: 12px; }
@@ -515,15 +581,26 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   z-index: 100; max-width: min(90vw, 480px); text-align: center;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (max-width: 1127px) { .toast { bottom: calc(148px + env(safe-area-inset-bottom)); } }
 
 /* 页脚 */
 .foot { margin-top: 48px; padding: 24px 0 32px; border-top: 1px solid var(--border); }
 .foot p { font-size: var(--text-xs); color: var(--muted); line-height: 1.6; }
 @media (min-width: 1128px) { .foot { margin-top: 80px; } }
+@media (max-width: 1127px) {
+  .foot { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+}
 
 @media (max-width: 599px) {
-  .drop { padding: 48px 20px 40px; }
-  .stage { min-height: calc(100vh - 80px); }
+  .nav { height: 56px; }
+  .stage { min-height: calc(100vh - 56px); }
+  .drop { padding: 40px 20px 36px; }
+  .drop-icon { width: 56px; height: 56px; margin-bottom: 20px; }
+  .drop-icon svg { width: 24px; height: 24px; }
+  .drop h1 { font-size: clamp(28px, 6.4vw, 34px); line-height: 1.35; }
+  .drop .sub { font-size: 15px; line-height: 1.75; }
+  .drop .actions .btn { width: 100%; }
+  .brand-name { font-size: var(--text-lg); }
   .brand-name em { display: none; }
 }
 </style>
@@ -573,16 +650,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   </section>
 
   <!-- 工作台 -->
-  <section class="work hidden" id="workbench" data-od-id="workbench">
+  <section class="work hidden tab-images" id="workbench" data-od-id="workbench">
     <div class="work-grid">
-      <div class="mobile-tool" data-od-id="mobile-tool">
-        <button class="btn btn-secondary btn-toggle" id="paramsToggle" data-od-id="params-toggle" aria-expanded="false" aria-controls="paramsBody">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h10M18 8h2M4 16h2M10 16h10M14 5v6M6 13v6"/></svg>
-          压缩设置
-        </button>
-        <span class="tool-summary" id="mobileSummary">共 0 张</span>
-      </div>
-
       <aside class="params" id="paramsPanel" data-od-id="params-panel">
         <div class="params-head">
           <h2>压缩设置</h2>
@@ -667,7 +736,14 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
         </div>
       </aside>
 
-      <section class="results" data-od-id="results-list">
+      <section class="results" id="resultsPage" data-od-id="results-list">
+        <div class="m-results-head" data-od-id="mobile-results-head">
+          <p class="m-summary" id="mobileSummary">共 0 张</p>
+          <div class="m-head-acts">
+            <button class="btn btn-secondary" id="addMoreMobile" data-od-id="add-more-mobile">添加图片</button>
+            <button class="btn btn-ghost" id="clearAllMobile" data-od-id="clear-all-mobile">清除全部</button>
+          </div>
+        </div>
         <div class="batch-bar" data-od-id="batch-bar">
           <p class="batch-summary" id="summaryText">共 0 张</p>
           <div class="batch-acts">
@@ -677,6 +753,40 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
           </div>
         </div>
         <div class="grid" id="resultsGrid"></div>
+        <div class="list" id="resultsList" data-od-id="results-list-mobile"></div>
+        <div class="m-dock" id="mDock" data-od-id="mobile-dock">
+          <span class="m-saved" id="mobileSaved">等待处理…</span>
+          <button class="btn btn-primary" id="downloadAllMobile" data-od-id="download-all-mobile">下载全部</button>
+        </div>
+      </section>
+
+      <section class="m-preview" id="previewPage" data-od-id="mobile-preview">
+        <div class="m-preview-top">
+          <div class="seg m-compare" id="previewCompare" data-od-id="preview-compare" role="group" aria-label="对比视图">
+            <button data-val="result" class="active">结果</button>
+            <button data-val="orig">原图</button>
+          </div>
+          <span class="m-preview-count" id="previewCount" aria-live="polite">1 / 1</span>
+        </div>
+        <div class="m-preview-stage" id="previewStage">
+          <img id="previewImg" alt="">
+        </div>
+        <div class="m-preview-meta">
+          <div class="ri-name" id="previewName"></div>
+          <div class="ri-sub" id="previewSub"></div>
+          <div class="ri-sizes" id="previewSizes"></div>
+        </div>
+        <div class="m-preview-acts">
+          <button class="btn btn-secondary" id="previewPrev" data-od-id="preview-prev" aria-label="上一张">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>上一张
+          </button>
+          <button class="btn btn-primary" id="previewDownload" data-od-id="preview-download" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>下载这张
+          </button>
+          <button class="btn btn-secondary" id="previewNext" data-od-id="preview-next" aria-label="下一张">
+            下一张<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
       </section>
     </div>
   </section>
@@ -686,19 +796,21 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   </footer>
 </main>
 
-<!-- 移动端底部批量栏 -->
-<div class="mobile-bar hidden" id="mobileBar" data-od-id="mobile-bar">
-  <div class="mb-left">
-    <button class="btn-icon" id="addMoreMobile" aria-label="添加图片" title="添加图片">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-    </button>
-    <button class="btn-icon" id="clearAllMobile" aria-label="清除全部" title="清除全部">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M10 11v6M14 11v6M18 7l-1 12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg>
-    </button>
-    <span class="mb-saved" id="mobileSaved">已节省 0 B</span>
-  </div>
-  <button class="btn btn-primary" id="downloadAllMobile" data-od-id="download-all-mobile">下载全部</button>
-</div>
+<!-- 移动端底部标签栏 -->
+<nav class="mobile-tabs hidden" id="mobileTabs" data-od-id="mobile-tabs" aria-label="工作台页面">
+  <button class="mtab active" id="tabImages" data-od-id="tab-images" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M3 16l5-4 4 3 4-3 5 4"/></svg>
+    图片
+  </button>
+  <button class="mtab" id="tabParams" data-od-id="tab-params">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h10M18 8h2M4 16h2M10 16h10M14 5v6M6 13v6"/></svg>
+    参数
+  </button>
+  <button class="mtab" id="tabPreview" data-od-id="tab-preview">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+    预览
+  </button>
+</nav>
 
 <input type="file" id="fileInput" accept="image/*" multiple hidden>
 <script src="vendor/jszip.min.js"></script>
@@ -752,12 +864,16 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
 
   var els = {};
   ['dropZone', 'fileInput', 'pickBtn', 'emptyState', 'workbench', 'foot',
-   'paramsPanel', 'paramsToggle', 'paramsBody', 'modeSeg', 'qualityWrap', 'qualitySlider',
+   'paramsPanel', 'paramsBody', 'modeSeg', 'qualityWrap', 'qualitySlider',
    'qualityVal', 'targetWrap', 'targetInput', 'targetNote', 'sizeSeg', 'customWrap',
    'wInput', 'hInput', 'lockSwitch', 'presetWrap', 'presetChips', 'formatSeg',
    'applySwitch', 'applyHint', 'applyHintName', 'summaryText', 'clearAll', 'addMore',
-   'addMoreMobile', 'downloadAll', 'resultsGrid', 'mobileBar', 'clearAllMobile', 'downloadAllMobile',
-   'mobileSummary', 'mobileSaved', 'resetBtn', 'toast'].forEach(function (id) {
+   'addMoreMobile', 'downloadAll', 'resultsGrid', 'resultsList', 'clearAllMobile', 'downloadAllMobile',
+   'mobileSummary', 'mobileSaved', 'mDock', 'resetBtn', 'toast',
+   'mobileTabs', 'tabImages', 'tabParams', 'tabPreview',
+   'previewPage', 'previewCompare', 'previewImg', 'previewName', 'previewSub',
+   'previewSizes', 'previewCount', 'previewPrev', 'previewNext', 'previewDownload',
+   'previewStage'].forEach(function (id) {
     els[id] = $('#' + id);
   });
 
@@ -1020,18 +1136,64 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
       '</div></article>';
   }
 
+  function rowHTML(it) {
+    var fmt = it.resultType ? it.resultType.toUpperCase() : ((it.file.type.split('/')[1] || '').split('+')[0].toUpperCase() || '图片');
+    var subDims = it.resultDims ? it.resultDims.w + '×' + it.resultDims.h : '—';
+
+    var thumb;
+    if (it.status === 'done') thumb = '<img src="' + (it.showOrig ? it.origUrl : it.resultUrl) + '" alt="" loading="lazy">';
+    else if (it.origUrl) thumb = '<img src="' + it.origUrl + '" alt="" loading="lazy">';
+    else thumb = '<div class="ri-ph" aria-hidden="true">' + ICON.image + '</div>';
+
+    var overlay = '';
+    if (it.status === 'processing') overlay = '<div class="ph-progress"><div class="progress"><i></i></div></div>';
+    else if (it.status === 'error') overlay = '<div class="ph-error">无法读取</div>';
+    var badge = (it.status === 'done' && it.showOrig) ? '<span class="ri-badge">原图</span>' : '';
+
+    var sizes;
+    if (it.status === 'error') {
+      sizes = '<span class="ri-err">' + esc(it.error || '处理失败') +
+        ' <button class="link" data-action="retry">重试</button></span>';
+    } else if (it.status === 'processing') {
+      sizes = '<span class="ri-state">处理中…</span>';
+    } else {
+      var newS = formatBytes(it.resultBlob.size);
+      var pct = Math.round((1 - it.resultBlob.size / it.file.size) * 100);
+      sizes = '<s class="ri-old">' + formatBytes(it.file.size) + '</s><b class="ri-new">' + newS + '</b>' +
+        (pct > 0 ? '<span class="badge">节省 ' + pct + '%</span>' : '');
+    }
+
+    return '<div class="row-item' + (it.selected ? ' selected' : '') + '" data-id="' + it.id + '" role="button" tabindex="0" aria-label="' + esc(it.file.name) + '">' +
+      '<div class="ri-thumb">' + thumb + overlay + badge + '</div>' +
+      '<div class="ri-main">' +
+        '<div class="ri-name" title="' + esc(it.file.name) + '">' + esc(it.file.name) + '</div>' +
+        '<div class="ri-sub">' + subDims + ' · ' + esc(fmt) + '</div>' +
+        '<div class="ri-sizes">' + sizes + '</div>' +
+      '</div>' +
+      '<div class="ri-acts">' +
+        '<button class="btn-icon" data-action="download" aria-label="下载" title="下载">' + ICON.download + '</button>' +
+        '<button class="btn-icon" data-action="delete" aria-label="删除" title="删除">' + ICON.trash + '</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   function renderCard(it) {
-    var el = els.resultsGrid.querySelector('[data-id="' + it.id + '"]');
-    if (!el) return;
-    el.outerHTML = cardHTML(it);
+    var card = els.resultsGrid.querySelector('[data-id="' + it.id + '"]');
+    if (card) card.outerHTML = cardHTML(it);
+    var row = els.resultsList.querySelector('[data-id="' + it.id + '"]');
+    if (row) row.outerHTML = rowHTML(it);
+    if (it.selected) renderPreview(it);
   }
 
   function renderAll() {
     els.resultsGrid.innerHTML = '';
+    els.resultsList.innerHTML = '';
     state.files.forEach(function (it) {
       els.resultsGrid.insertAdjacentHTML('beforeend', cardHTML(it));
+      els.resultsList.insertAdjacentHTML('beforeend', rowHTML(it));
     });
     updateSummary();
+    renderPreview(selectedItem());
   }
 
   function updateSummary() {
@@ -1042,6 +1204,9 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     els.summaryText.innerHTML = txt + (saved > 0 ? ' <span>· 全程本地完成</span>' : '');
     els.mobileSummary.textContent = '共 ' + n + ' 张';
     els.mobileSaved.textContent = saved > 0 ? '已节省 ' + formatBytes(saved) : '等待处理…';
+    var canDl = done.length > 0;
+    els.downloadAll.disabled = !canDl;
+    els.downloadAllMobile.disabled = !canDl;
   }
 
   function selectedItem() {
@@ -1071,14 +1236,15 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   function showWork() {
     els.emptyState.classList.add('hidden');
     els.workbench.classList.remove('hidden');
-    els.mobileBar.classList.remove('hidden');
+    els.mobileTabs.classList.remove('hidden');
     els.foot.classList.remove('hidden');
+    setTab('images');
   }
 
   function showEmpty() {
     els.emptyState.classList.remove('hidden');
     els.workbench.classList.add('hidden');
-    els.mobileBar.classList.add('hidden');
+    els.mobileTabs.classList.add('hidden');
     els.foot.classList.add('hidden');
   }
 
@@ -1151,7 +1317,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     if (it.status !== 'done' || !it.resultBlob) return;
     var name = filenameFor(it);
     var file = new File([it.resultBlob], name, { type: it.resultBlob.type });
-    if (window.navigator.canShare && navigator.canShare({ files: [file] })) {
+    // 仅手机端走系统分享面板(桌面 Chrome 也支持 share,必须用 IS_MOBILE 区分,避免误弹分享面板)
+    if (IS_MOBILE && window.navigator.canShare && navigator.canShare({ files: [file] })) {
       try { await navigator.share({ files: [file] }); return; } catch (e) { /* 用户取消则回退下载 */ }
     }
     var url = URL.createObjectURL(it.resultBlob);
@@ -1165,9 +1332,30 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     var done = state.files.filter(function (f) { return f.status === 'done'; });
     if (!done.length) { toast('还没有可下载的图片'); return; }
     if (done.length < state.files.length) toast('部分图片仍在处理中');
-    for (var i = 0; i < done.length; i++) {
-      await downloadItem(done[i]);
-      await new Promise(function (r) { setTimeout(r, 180); });
+    // 手机:逐张走系统分享/存相册;桌面:打包为一个 zip 下载
+    if (IS_MOBILE) {
+      for (var i = 0; i < done.length; i++) {
+        await downloadItem(done[i]);
+        await new Promise(function (r) { setTimeout(r, 180); });
+      }
+      return;
+    }
+    try {
+      var zip = new JSZip();
+      done.forEach(function (it) { zip.file(filenameFor(it), it.resultBlob); });
+      var blob = await zip.generateAsync({ type: 'blob' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = '图小-压缩图片.zip';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      toast('已打包下载 ' + done.length + ' 张图片');
+    } catch (e) {
+      toast('打包失败,改为逐张下载');
+      for (var j = 0; j < done.length; j++) {
+        await downloadItem(done[j]);
+        await new Promise(function (r) { setTimeout(r, 180); });
+      }
     }
   }
 
@@ -1363,9 +1551,134 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   els.downloadAll.addEventListener('click', downloadAll);
   els.downloadAllMobile.addEventListener('click', downloadAll);
 
-  els.paramsToggle.addEventListener('click', function () {
-    var open = els.paramsPanel.classList.toggle('open');
-    els.paramsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  function setTab(id) {
+    els.workbench.classList.remove('tab-images', 'tab-params', 'tab-preview');
+    els.workbench.classList.add('tab-' + id);
+    [els.tabImages, els.tabParams, els.tabPreview].forEach(function (b) {
+      b.classList.toggle('active', b.id === ('tab-' + id));
+      b.setAttribute('aria-current', b.id === ('tab-' + id) ? 'page' : 'false');
+    });
+    els.mDock.classList.toggle('hidden', id !== 'images');
+    window.scrollTo(0, 0);
+  }
+
+  els.tabImages.addEventListener('click', function () { setTab('images'); });
+  els.tabParams.addEventListener('click', function () { setTab('params'); });
+  els.tabPreview.addEventListener('click', function () {
+    setTab('preview');
+    renderPreview(selectedItem());
+  });
+
+  function renderPreview(it) {
+    if (!it) return;
+    var errPh = els.previewStage.querySelector('.ph-error');
+    if (errPh) errPh.remove();
+    els.previewImg.classList.remove('hidden');
+    var orig = it.origUrl;
+    var res = it.resultUrl;
+    var isOrig = it.status === 'done' && it.showOrig;
+    if (isOrig && orig) {
+      els.previewImg.src = orig;
+      els.previewName.textContent = it.file.name + '（原图）';
+      els.previewSub.textContent = '原始文件';
+      els.previewSizes.innerHTML = '<s class="ri-old">—</s><b class="ri-new">' + formatBytes(it.file.size) + '</b>';
+      els.previewDownload.disabled = true;
+    } else if (it.status === 'done' && res) {
+      els.previewImg.src = res;
+      els.previewName.textContent = it.file.name;
+      els.previewSub.textContent = (it.resultDims ? it.resultDims.w + '×' + it.resultDims.h : '—') + ' · ' + (it.resultType || '').toUpperCase();
+      els.previewSizes.innerHTML = '<s class="ri-old">' + formatBytes(it.file.size) + '</s><b class="ri-new">' + formatBytes(it.resultBlob.size) + '</b>';
+      els.previewDownload.disabled = false;
+    } else if (it.status === 'processing') {
+      els.previewImg.src = it.origUrl;
+      els.previewName.textContent = it.file.name;
+      els.previewSub.textContent = '处理中…';
+      els.previewSizes.innerHTML = '<span class="ri-state">处理中…</span>';
+      els.previewDownload.disabled = true;
+    } else {
+      els.previewImg.src = '';
+      els.previewImg.classList.add('hidden');
+      var ph = document.createElement('div');
+      ph.className = 'ph-error';
+      ph.textContent = esc(it.error || '无法读取该文件');
+      els.previewStage.appendChild(ph);
+      els.previewName.textContent = it.file.name;
+      els.previewSub.textContent = '';
+      els.previewSizes.innerHTML = '';
+      els.previewDownload.disabled = true;
+    }
+    els.previewCount.textContent = (state.files.indexOf(it) + 1) + ' / ' + state.files.length;
+    if (it.status === 'done') {
+      els.previewCompare.classList.remove('hidden');
+      els.previewCompare.querySelector('[data-val="orig"]').classList.toggle('active', !!it.showOrig);
+      els.previewCompare.querySelector('[data-val="result"]').classList.toggle('active', !it.showOrig);
+    } else {
+      els.previewCompare.classList.add('hidden');
+    }
+  }
+
+  function selectOnly(idx) {
+    state.files.forEach(function (f) { f.selected = false; });
+    var it = state.files[idx];
+    if (!it) return;
+    it.selected = true;
+    renderAll();
+    syncApplyHint();
+  }
+
+  function stepPreview(dir) {
+    if (!state.files.length) return;
+    var idx = state.files.indexOf(selectedItem());
+    idx = (idx + dir + state.files.length) % state.files.length;
+    selectOnly(idx);
+    setTab('preview');
+  }
+
+  els.previewPrev.addEventListener('click', function () { stepPreview(-1); });
+  els.previewNext.addEventListener('click', function () { stepPreview(1); });
+  els.previewDownload.addEventListener('click', function () {
+    var it = selectedItem();
+    if (it && it.status === 'done' && it.resultBlob) downloadItem(it);
+  });
+
+  els.previewCompare.addEventListener('click', function (e) {
+    var seg = e.target.closest('button[data-val]');
+    if (!seg) return;
+    var it = selectedItem();
+    if (!it) return;
+    it.showOrig = seg.dataset.val === 'orig';
+    els.previewCompare.querySelectorAll('button').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.val === seg.dataset.val);
+    });
+    renderPreview(it);
+    renderCard(it);
+  });
+
+  els.resultsList.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-action]');
+    if (btn) {
+      var row = e.target.closest('.row-item');
+      var it = row && byId(row.dataset.id);
+      if (!it) return;
+      if (btn.dataset.action === 'delete') deleteItem(it);
+      else if (btn.dataset.action === 'download') downloadItem(it);
+      else if (btn.dataset.action === 'retry') processFile(it);
+      return;
+    }
+    var item = e.target.closest('.row-item');
+    if (!item) return;
+    var it = byId(item.dataset.id);
+    if (!it) return;
+    selectOnly(state.files.indexOf(it));
+    setTab('preview');
+  });
+
+  els.resultsList.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var item = e.target.closest('.row-item');
+    if (!item) return;
+    e.preventDefault();
+    item.click();
   });
 
   els.resultsGrid.addEventListener('click', function (e) {
