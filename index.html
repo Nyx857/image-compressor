@@ -31,24 +31,27 @@
     </div>
   </section>
 
-  <!-- 结果区(在参数上方,操作时可见) -->
-  <section class="results" id="resultsSection" hidden>
-    <div class="results-head">
-      <h2>处理结果</h2>
-      <div class="results-actions">
-        <span class="progress-text" id="progressText" hidden></span>
-        <button type="button" class="btn btn-danger-ghost" id="clearBtn" hidden>🗑 全部清除</button>
-        <button type="button" class="btn btn-secondary" id="zipBtn" hidden>⬇ 打包下载全部</button>
+  <!-- 工作台:桌面两栏(参数面板 + 结果区),手机单列 -->
+  <div class="work-grid">
+    <!-- 结果区(在参数上方,操作时可见) -->
+    <section class="results" id="resultsSection" hidden>
+      <div class="results-head">
+        <h2>处理结果</h2>
+        <div class="results-actions">
+          <span class="progress-text" id="progressText" hidden></span>
+          <button type="button" class="btn btn-danger-ghost" id="clearBtn" hidden>🗑 全部清除</button>
+          <button type="button" class="btn btn-secondary" id="zipBtn" hidden>⬇ 打包下载全部</button>
+        </div>
       </div>
-    </div>
-    <div class="progress-bar hidden" id="progressBarWrap">
-      <div class="progress-bar-inner" id="progressBarInner"></div>
-    </div>
-    <div class="card-list" id="cardList"></div>
-  </section>
+      <div class="batch-stats hidden" id="batchStats">共 0 张 · 已节省 0 · 全程本地完成</div>
+      <div class="progress-bar hidden" id="progressBarWrap">
+        <div class="progress-bar-inner" id="progressBarInner"></div>
+      </div>
+      <div class="card-list" id="cardList"></div>
+    </section>
 
-  <!-- 参数面板 -->
-  <section class="panel" id="paramsPanel" hidden>
+    <!-- 参数面板 -->
+    <section class="panel" id="paramsPanel" hidden>
     <h2>压缩参数</h2>
     <div class="param-grid">
       <div class="param">
@@ -112,6 +115,7 @@
       </div>
     </div>
   </section>
+  </div><!-- /work-grid -->
 
   <p class="footer-note">提示:本工具完全在浏览器本地运行,图片不会上传到任何服务器,可放心使用。</p>
 

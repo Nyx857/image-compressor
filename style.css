@@ -4,16 +4,20 @@
 
 :root {
   /* open-design 生成设计:airbnb 系(在线图片压缩 · "图小") */
-  --primary: #ff385c;        /* Airbnb 红 */
+  --primary: #ff385c;
   --primary-dark: #e00b41;
-  --primary-soft: #fff0f3;   /* 主色浅底 */
-  --bg: #f7f7f7;             /* 暖灰白 */
+  --primary-soft: #fff0f3;
+  --bg: #f7f7f7;
   --card: #ffffff;
   --text: #222222;
   --text-muted: #6f6f6f;
   --border: #ebebeb;
   --green: #1da05e;
   --red: #c13515;
+  /* 间距刻度(4px 步进,open-design 规范) */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
+  /* 圆角体系 */
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
@@ -45,9 +49,35 @@ body {
 
 /* ---- 主容器 ---- */
 .container {
-  max-width: 860px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: var(--space-4);
+}
+@media (min-width: 600px) { .container { padding: var(--space-6); } }
+@media (min-width: 1128px) { .container { padding: 40px; } }
+
+/* ---- 工作台两栏(open-design 布局规范:桌面 ≥1128px) ---- */
+.work-grid { display: block; }
+@media (min-width: 1128px) {
+  .work-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .work-grid .panel { position: sticky; top: 24px; margin-top: 0; }
+}
+
+/* ---- 批量统计行 ---- */
+.batch-stats {
+  font-size: .85rem;
+  color: var(--text-muted);
+  background: var(--primary-soft);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  display: inline-block;
+  margin-bottom: 10px;
+  font-weight: 500;
 }
 
 /* ---- 通用按钮 ---- */
@@ -256,6 +286,16 @@ body {
   padding: 0 .45rem;
   font-size: .8rem;
   font-weight: 600;
+}
+.format-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  background: #f0f0f0;
+  color: #555;
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  margin-right: 6px;
+  text-transform: uppercase;
 }
 
 /* ---- 底部提示 ---- */

@@ -13,6 +13,7 @@
   const cardList = $('cardList');
   const zipBtn = $('zipBtn');
   const clearBtn = $('clearBtn');
+  const batchStats = $('batchStats');
   const progressText = $('progressText');
   const progressBarWrap = $('progressBarWrap');
   const progressBarInner = $('progressBarInner');
@@ -76,6 +77,7 @@
     results.splice(i, 1);
     gen++;                 // 让正在跑的处理队列立即失效
     processing = false;
+    updateBatchStats();
     renderCards();
     if (files.length > 0) {
       clearBtn.hidden = files.length < 2;
@@ -172,8 +174,19 @@
       progressBarWrap.hidden = true;
       progressText.hidden = true;
       updateZipBtn();
+      updateBatchStats();
       renderCards();
     });
+  }
+
+  // ---- 批量统计行 ----
+  function updateBatchStats() {
+    const done = results.filter((r) => r && !r.error && r.blob);
+    if (done.length === 0) { batchStats.hidden = true; return; }
+    let saved = 0;
+    done.forEach((r) => { saved += Math.max(0, r.originalSize - r.newSize); });
+    batchStats.textContent = '共 ' + done.length + ' 张 · 已节省 ' + formatSize(saved) + ' · 全程本地完成';
+    batchStats.hidden = false;
   }
 
   // ---- 渲染结果卡片 ----
@@ -222,6 +235,10 @@
           ? Math.max(0, Math.round((1 - res.newSize / res.originalSize) * 100)) : 0;
         const dims = document.createElement('span');
         dims.textContent = res.width + '×' + res.height + ' · ';
+        // 格式标签(open-design 规范:11px 等宽圆角标签)
+        const fmt = document.createElement('span');
+        fmt.className = 'format-tag';
+        fmt.textContent = res.fileName.split('.').pop() || 'jpg';
         const sizeOld = document.createElement('span');
         sizeOld.className = 'size-old';
         sizeOld.textContent = formatSize(res.originalSize);
