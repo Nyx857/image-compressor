@@ -845,6 +845,11 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   };
 
   var MIME = { jpg: 'image/jpeg', webp: 'image/webp', png: 'image/png' };
+  // 浏览器是否支持输出 webp(移动 Safari 不支持,会自动降级成 png/jpeg → 导致“压缩反而变大”)
+  var WEBP_OK = (function () {
+    try { return document.createElement('canvas').toDataURL('image/webp').indexOf('image/webp') === 5; }
+    catch (e) { return false; }
+  })();
 
   var ICON = {
     download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
@@ -981,7 +986,10 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   }
 
   function pickAuto(canvas, file) {
-    var opts = hasAlpha(file) ? ['webp', 'png'] : ['webp', 'jpg'];
+    // 不支持 webp 输出时:无透明走 jpg(照片),有透明走 png(图标)
+    var opts = WEBP_OK
+      ? (hasAlpha(file) ? ['webp', 'png'] : ['webp', 'jpg'])
+      : (hasAlpha(file) ? ['png'] : ['jpg']);
     return blobAt(canvas, opts[0], 0.8).then(function (first) {
       var best = { f: opts[0], b: first };
       var rest = opts.slice(1);
@@ -1072,28 +1080,43 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
             if (real === 'jpeg') real = 'jpg';
             if (real && real !== fmt) fmt = real;
           }
-          // 压缩后没有变小:保留原图,不误导用户(如 PNG 无损图)
-          if (blob.size >= item.file.size) {
-            item.keptOriginal = true;
-            item.resultBlob = item.file;
-            item.resultType = (item.file.type.split('/')[1] || '').split('+')[0].replace('jpeg', 'jpg');
-            item.resultDims = { w: item.bitmap.width, h: item.bitmap.height };
+          // 压缩后没变小:兜底转 JPG 再压一次(无透明时);都不行才保留原图
+          var finish = function (b, f, w, h) {
+            if (b.size >= item.file.size) {
+              item.keptOriginal = true;
+              item.resultBlob = item.file;
+              item.resultType = (item.file.type.split('/')[1] || '').split('+')[0].replace('jpeg', 'jpg');
+              item.resultDims = { w: item.bitmap.width, h: item.bitmap.height };
+              if (item.resultUrl && item.resultUrl !== item.origUrl) URL.revokeObjectURL(item.resultUrl);
+              item.resultUrl = item.origUrl;
+              item.status = 'done';
+              renderCard(item);
+              updateSummary();
+              return;
+            }
+            item.keptOriginal = false;
             if (item.resultUrl && item.resultUrl !== item.origUrl) URL.revokeObjectURL(item.resultUrl);
-            item.resultUrl = item.origUrl;
+            item.resultBlob = b;
+            item.resultType = f;
+            item.resultDims = { w: w, h: h };
+            item.resultUrl = URL.createObjectURL(b);
             item.status = 'done';
             renderCard(item);
             updateSummary();
-            return;
+          };
+          if (blob.size >= item.file.size && fmt !== 'jpg') {
+            // 兜底:转 JPG(白底)再压一次——PNG 照片转 JPG 通常能大幅缩小
+            var cvj = document.createElement('canvas');
+            cvj.width = cv.width; cvj.height = cv.height;
+            var cj = cvj.getContext('2d');
+            cj.fillStyle = '#ffffff'; cj.fillRect(0, 0, cvj.width, cvj.height);
+            cj.drawImage(cv, 0, 0);
+            return blobAt(cvj, 'jpg', 0.7).then(function (jb) {
+              if (jb && jb.size < blob.size) finish(jb, 'jpg', cv.width, cv.height);
+              else finish(blob, fmt, cv.width, cv.height);
+            });
           }
-          item.keptOriginal = false;
-          if (item.resultUrl && item.resultUrl !== item.origUrl) URL.revokeObjectURL(item.resultUrl);
-          item.resultBlob = blob;
-          item.resultType = fmt;
-          item.resultDims = { w: cv.width, h: cv.height };
-          item.resultUrl = URL.createObjectURL(blob);
-          item.status = 'done';
-          renderCard(item);
-          updateSummary();
+          finish(blob, fmt, cv.width, cv.height);
         });
       }).catch(function (err) {
         item.status = 'error';
@@ -1140,7 +1163,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     } else if (it.status === 'processing') {
       sizes = '<div class="processing"><div class="progress"><i></i></div><span class="processing-label">处理中…</span></div>';
     } else if (it.keptOriginal) {
-      sizes = '<div class="sizes"><span class="badge">原图已最小,未压缩</span></div>';
+      sizes = '<div class="sizes"><span class="badge">已是最小,无需压缩 👍</span></div>';
     } else {
       var newS = formatBytes(it.resultBlob.size);
       var pct = Math.round((1 - it.resultBlob.size / it.file.size) * 100);
@@ -1185,7 +1208,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     } else if (it.status === 'processing') {
       sizes = '<span class="ri-state">处理中…</span>';
     } else if (it.keptOriginal) {
-      sizes = '<span class="ri-state">原图已最小,未压缩</span>';
+      sizes = '<span class="ri-state">已是最小 👍</span>';
     } else {
       var newS = formatBytes(it.resultBlob.size);
       var pct = Math.round((1 - it.resultBlob.size / it.file.size) * 100);
