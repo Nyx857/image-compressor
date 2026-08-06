@@ -88,6 +88,7 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { color-scheme: light; -webkit-text-size-adjust: 100%; }
+html, body { overflow-x: hidden; max-width: 100vw; }
 body {
   font-family: var(--font-body);
   font-weight: 500;
@@ -589,6 +590,15 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
 @media (min-width: 1128px) { .foot { margin-top: 80px; } }
 @media (max-width: 1127px) {
   .foot { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+  /* 手机端:不需要拖拽/粘贴快捷键提示(那是桌面交互) */
+  .drop .hint { display: none; }
+  /* 隐私行:锁图标不缩放,文字换行正常,整体居中 */
+  .drop .privacy {
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .drop .privacy svg { flex: none; }
 }
 
 @media (max-width: 599px) {
@@ -956,8 +966,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     });
   }
 
-  // 并发控制:最多同时处理 3 张,避免大图批量时卡死
-  var ACTIVE = 0, MAX_ACTIVE = 3, PQUEUE = [];
+  // 并发控制:最多同时处理 3 张(手机端 2 张,缓解大图内存压力),避免批量时卡死
+  var ACTIVE = 0, MAX_ACTIVE = IS_MOBILE ? 2 : 3, PQUEUE = [];
   function runQueue() {
     while (ACTIVE < MAX_ACTIVE && PQUEUE.length) {
       var fn = PQUEUE.shift();
@@ -1071,8 +1081,10 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
           renderCard(item);
           updateSummary();
         });
-      }).catch(function () {
-        item.status = 'error'; item.error = '处理失败'; renderCard(item);
+      }).catch(function (err) {
+        item.status = 'error';
+        item.error = (err && err.message === 'compress-failed') ? '无法达到目标大小' : '处理失败,可点重试';
+        renderCard(item);
       }).then(doneOne);
     }, 30);
     });
