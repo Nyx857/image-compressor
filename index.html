@@ -311,6 +311,8 @@ kbd {
   .params { position: sticky; top: 96px; border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--elev-raised); padding: 24px; }
 }
 .params-body { display: block; }
+.target-unit { width: 108px; flex: none; }
+.target-unit button { min-height: 40px; font-size: 13px; padding: 2px 8px; }
 .params-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
 @media (min-width: 1128px) { .params-head { margin-bottom: 0; } }
 .params-head h2 { font-size: var(--text-xl); font-weight: 700; letter-spacing: 0; line-height: 1.3; }
@@ -680,8 +682,11 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
             </div>
             <div class="quality-row hidden" id="targetWrap" style="margin-top:16px">
               <div class="field dims-unit">
-                <input type="number" id="targetInput" min="10" max="10240" step="10" value="200" inputmode="numeric" aria-label="目标大小">
-                <span class="unit">KB</span>
+                <input type="number" id="targetInput" min="1" max="10240" step="1" value="200" inputmode="decimal" aria-label="目标大小">
+              </div>
+              <div class="seg target-unit" id="targetUnitSeg" role="group" aria-label="单位">
+                <button type="button" data-unit="kb" class="active">KB</button>
+                <button type="button" data-unit="mb">MB</button>
               </div>
             </div>
             <p class="p-note" id="targetNote" hidden>以最接近目标体积输出,部分格式可能无法精确命中。</p>
@@ -845,6 +850,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   };
 
   var MIME = { jpg: 'image/jpeg', webp: 'image/webp', png: 'image/png' };
+  // 处理最大边长:超过先降采样,避免 20MB+ 大图把内存打爆(相机照片一般 6000px 内)
+  var MAX_EDGE = 4096;
   // 浏览器是否支持输出 webp(移动 Safari 不支持,会自动降级成 png/jpeg → 导致“压缩反而变大”)
   var WEBP_OK = (function () {
     try { return document.createElement('canvas').toDataURL('image/webp').indexOf('image/webp') === 5; }
@@ -880,7 +887,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   var els = {};
   ['dropZone', 'fileInput', 'pickBtn', 'emptyState', 'workbench', 'foot',
    'paramsPanel', 'paramsBody', 'modeSeg', 'qualityWrap', 'qualitySlider',
-   'qualityVal', 'targetWrap', 'targetInput', 'targetNote', 'sizeSeg', 'customWrap',
+   'qualityVal', 'targetWrap', 'targetInput', 'targetUnitSeg', 'targetNote', 'sizeSeg', 'customWrap',
    'wInput', 'hInput', 'lockSwitch', 'presetWrap', 'presetChips', 'formatSeg',
    'applySwitch', 'applyHint', 'applyHintName', 'summaryText', 'clearAll', 'addMore',
    'addMoreMobile', 'downloadAll', 'resultsGrid', 'resultsList', 'clearAllMobile', 'downloadAllMobile',
@@ -1050,6 +1057,14 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
           cctx.drawImage(src, -sx, -sy, dw, dh);
         } else {
           var dims = computeDims(src);
+          // 大图降采样:原尺寸模式超过 4096 边长先缩小(内存保护,防卡死)
+          if (p.sizeMode === 'original') {
+            var mx = Math.max(dims.w, dims.h);
+            if (mx > MAX_EDGE) {
+              var sc2 = MAX_EDGE / mx;
+              dims = { w: Math.max(1, Math.round(dims.w * sc2)), h: Math.max(1, Math.round(dims.h * sc2)) };
+            }
+          }
           cv = document.createElement('canvas');
           cv.width = dims.w; cv.height = dims.h;
           var ctx = cv.getContext('2d');
@@ -1065,11 +1080,15 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
       fmtTask.then(function (fmt) {
         var q = p.mode === 'quality' ? p.quality / 100 : 0.8;
         var blobTask;
-        if (p.mode === 'target' && fmt !== 'png') {
-          // 目标模式:无透明通道时优先 jpg(防 iOS 相册 webp→jpg 转码膨胀)
-          var want = fmt === 'webp' && !hasAlpha(item.file) ? 'jpg' : fmt;
+        if (p.mode === 'target') {
+          // 目标模式:PNG(无透明)直接转 JPG 保证能压到目标;有透明保留 PNG 靠缩放降级
+          var want = fmt === 'png'
+            ? (hasAlpha(item.file) ? 'png' : 'jpg')
+            : (fmt === 'webp' && !hasAlpha(item.file) ? 'jpg' : fmt);
           blobTask = compressToTarget(cv, want, p.targetKB);
         } else {
+          // 质量模式:自动格式选出的无透明 PNG 改走 JPG(否则滑块无效,PNG 无损)
+          if (p.format === 'auto' && fmt === 'png' && !hasAlpha(item.file)) fmt = 'jpg';
           blobTask = blobAt(cv, fmt, q);
         }
         return blobTask.then(function (blob) {
@@ -1508,8 +1527,27 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   });
 
   els.targetInput.addEventListener('input', function () {
-    var v = parseInt(els.targetInput.value, 10);
-    if (!isNaN(v)) state.params.targetKB = Math.min(10240, Math.max(10, v));
+    var v = parseFloat(els.targetInput.value);
+    if (isNaN(v)) return;
+    var kb = targetUnit() === 'mb' ? v * 1024 : v;
+    state.params.targetKB = Math.min(10240, Math.max(1, Math.round(kb)));
+    schedule();
+  });
+
+  // 目标大小单位切换(KB / MB)
+  function targetUnit() {
+    return els.targetUnitSeg.querySelector('button.active').dataset.unit;
+  }
+  els.targetUnitSeg.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-unit]');
+    if (!btn) return;
+    Array.prototype.forEach.call(els.targetUnitSeg.querySelectorAll('button'), function (b) {
+      b.classList.toggle('active', b === btn);
+    });
+    var cur = parseFloat(els.targetInput.value);
+    if (!isNaN(cur)) {
+      els.targetInput.value = targetUnit() === 'mb' ? (cur / 1024).toFixed(2) : Math.round(cur * 1024);
+    }
     schedule();
   });
 
@@ -1589,6 +1627,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     els.formatSeg.querySelector('[data-val="auto"]').click();
     els.qualitySlider.value = 70; syncQualityFill();
     els.targetInput.value = 200;
+    els.targetUnitSeg.querySelector('[data-unit="kb"]').click();
     els.wInput.value = ''; els.hInput.value = '';
     els.lockSwitch.checked = true;
     els.applySwitch.checked = true;
