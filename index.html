@@ -1072,7 +1072,21 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
             if (real === 'jpeg') real = 'jpg';
             if (real && real !== fmt) fmt = real;
           }
-          if (item.resultUrl) URL.revokeObjectURL(item.resultUrl);
+          // 压缩后没有变小:保留原图,不误导用户(如 PNG 无损图)
+          if (blob.size >= item.file.size) {
+            item.keptOriginal = true;
+            item.resultBlob = item.file;
+            item.resultType = (item.file.type.split('/')[1] || '').split('+')[0].replace('jpeg', 'jpg');
+            item.resultDims = { w: item.bitmap.width, h: item.bitmap.height };
+            if (item.resultUrl && item.resultUrl !== item.origUrl) URL.revokeObjectURL(item.resultUrl);
+            item.resultUrl = item.origUrl;
+            item.status = 'done';
+            renderCard(item);
+            updateSummary();
+            return;
+          }
+          item.keptOriginal = false;
+          if (item.resultUrl && item.resultUrl !== item.origUrl) URL.revokeObjectURL(item.resultUrl);
           item.resultBlob = blob;
           item.resultType = fmt;
           item.resultDims = { w: cv.width, h: cv.height };
@@ -1125,6 +1139,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
         '<button class="link" data-action="retry">重试</button></div>';
     } else if (it.status === 'processing') {
       sizes = '<div class="processing"><div class="progress"><i></i></div><span class="processing-label">处理中…</span></div>';
+    } else if (it.keptOriginal) {
+      sizes = '<div class="sizes"><span class="badge">原图已最小,未压缩</span></div>';
     } else {
       var newS = formatBytes(it.resultBlob.size);
       var pct = Math.round((1 - it.resultBlob.size / it.file.size) * 100);
@@ -1168,6 +1184,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
         ' <button class="link" data-action="retry">重试</button></span>';
     } else if (it.status === 'processing') {
       sizes = '<span class="ri-state">处理中…</span>';
+    } else if (it.keptOriginal) {
+      sizes = '<span class="ri-state">原图已最小,未压缩</span>';
     } else {
       var newS = formatBytes(it.resultBlob.size);
       var pct = Math.round((1 - it.resultBlob.size / it.file.size) * 100);
@@ -1322,7 +1340,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   }
 
   function filenameFor(it) {
-    return baseName(it.file.name) + '-压缩.' + it.resultType;
+    return baseName(it.file.name) + (it.keptOriginal ? '-原图' : '-压缩') + '.' + it.resultType;
   }
 
   async function downloadItem(it) {
