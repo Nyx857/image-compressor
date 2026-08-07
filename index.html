@@ -267,9 +267,9 @@ kbd {
 /* 移动端:恢复 v1.x 上下结构——结果在上、参数在下,不搞 tabs 切换 */
 @media (max-width: 1127px) {
   .work { padding-top: 20px; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
-  .work-grid { display: flex; flex-direction: column; }
-  #resultsPage { display: block !important; order: -1; }
-  #paramsPanel { display: block !important; }
+  .work-grid { display: grid; grid-template-columns: 1fr; }
+  #resultsPage { display: block !important; order: -1; min-width: 0; }
+  #paramsPanel { display: block !important; width: 100%; min-width: 0; }
   #previewPage { display: none !important; }
   .mobile-tabs { display: none !important; }
   .m-dock { bottom: calc(10px + env(safe-area-inset-bottom)); }
@@ -295,12 +295,17 @@ kbd {
 }
 @media (min-width: 1128px) { .m-results-head { display: none; } }
 
-/* 移动端底部操作条（图片页专属，固定于标签栏上方） */
+/* 移动端底部操作条(液态玻璃:悬浮圆角 + 毛玻璃 + 细高光,苹果 Liquid Glass 风格) */
 .m-dock {
-  position: fixed; left: 0; right: 0; z-index: 49;
-  bottom: calc(64px + env(safe-area-inset-bottom));
+  position: fixed; left: 12px; right: 12px; z-index: 49;
+  bottom: calc(12px + env(safe-area-inset-bottom));
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  background: var(--bg); border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.62);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 22px;
+  box-shadow: 0 4px 24px rgba(38, 34, 31, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   padding: 10px 16px;
 }
 .m-dock .m-saved { font-size: 13px; color: var(--fg-2); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
