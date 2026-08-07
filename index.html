@@ -836,6 +836,68 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
 
 <input type="file" id="fileInput" accept="image/*" multiple hidden>
 <script src="vendor/jszip.min.js"></script>
+<script>
+/* ── 苹果液态玻璃(Liquid Glass)——来自 Apple iOS 26 设计系统 ──
+ * 核心:SVG 位移折射滤镜 + RGB 三通道分离(棱镜色差)+ 双层模糊 + 内高光
+ * 不支持 backdrop-filter url() 的浏览器(iOS Safari)自动回退增强毛玻璃
+ */
+(function () {
+  var dock = document.getElementById('mDock');
+  if (!dock) return;
+  function enc(s) { return 'data:image/svg+xml;utf8,' + encodeURIComponent(s); }
+  function dispMap(w, h, r, depth) {
+    var topY = Math.ceil((r / h) * 15), botY = Math.floor(100 - (r / h) * 15);
+    var leftX = Math.ceil((r / w) * 15), rightX = Math.floor(100 - (r / w) * 15);
+    return enc('<svg height="' + h + '" width="' + w + '" viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<style>.mix{ mix-blend-mode: screen; }</style>' +
+      '<defs>' +
+      '<linearGradient id="Y" x1="0" x2="0" y1="' + topY + '%" y2="' + botY + '%"><stop offset="0%" stop-color="#0F0"/><stop offset="100%" stop-color="#000"/></linearGradient>' +
+      '<linearGradient id="X" x1="' + leftX + '%" x2="' + rightX + '%" y1="0" y2="0"><stop offset="0%" stop-color="#F00"/><stop offset="100%" stop-color="#000"/></linearGradient>' +
+      '</defs>' +
+      '<rect x="0" y="0" height="' + h + '" width="' + w + '" fill="#808080"/>' +
+      '<g filter="blur(2px)">' +
+      '<rect x="0" y="0" height="' + h + '" width="' + w + '" fill="#000080"/>' +
+      '<rect x="0" y="0" height="' + h + '" width="' + w + '" fill="url(#Y)" class="mix"/>' +
+      '<rect x="0" y="0" height="' + h + '" width="' + w + '" fill="url(#X)" class="mix"/>' +
+      '<rect x="' + depth + '" y="' + depth + '" height="' + (h - 2 * depth) + '" width="' + (w - 2 * depth) + '" fill="#808080" rx="' + r + '" ry="' + r + '" filter="blur(' + depth + 'px)"/>' +
+      '</g></svg>');
+  }
+  function glassFilter(w, h, r, depth, strength, cab) {
+    return enc('<svg height="' + h + '" width="' + w + '" viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg"><defs><filter id="displace" color-interpolation-filters="sRGB">' +
+      '<feImage x="0" y="0" height="' + h + '" width="' + w + '" href="' + dispMap(w, h, r, depth) + '" result="displacementMap"/>' +
+      '<feDisplacementMap transform-origin="center" in="SourceGraphic" in2="displacementMap" scale="' + (strength + cab * 2) + '" xChannelSelector="R" yChannelSelector="G"/>' +
+      '<feColorMatrix type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="displacedR"/>' +
+      '<feDisplacementMap in="SourceGraphic" in2="displacementMap" scale="' + (strength + cab) + '" xChannelSelector="R" yChannelSelector="G"/>' +
+      '<feColorMatrix type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="displacedG"/>' +
+      '<feDisplacementMap in="SourceGraphic" in2="displacementMap" scale="' + strength + '" xChannelSelector="R" yChannelSelector="G"/>' +
+      '<feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="displacedB"/>' +
+      '<feBlend in="displacedR" in2="displacedG" mode="screen"/><feBlend in2="displacedB" mode="screen"/></filter></defs></svg>') + '#displace';
+  }
+  function apply() {
+    var w = dock.offsetWidth, h = dock.offsetHeight;
+    if (!w || !h) return false;   // dock 尚不可见(未上传图),稍后重试
+    var r = 22, depth = 6, strength = 60;
+    var uri = glassFilter(w, h, r, depth, strength, 0);
+    var probe = document.createElement('div');
+    probe.style.cssText = 'backdrop-filter:url("data:image/svg+xml;utf8,<svg></svg>#d")';
+    var urlOk = probe.style.backdropFilter.indexOf('url') === 0;
+    dock.style.webkitBackdropFilter = 'blur(12px) saturate(180%)';
+    dock.style.backdropFilter = urlOk
+      ? 'blur(4px) url("' + uri + '") blur(8px) brightness(1.1) saturate(1.5)'
+      : 'blur(12px) saturate(180%)';
+    return true;
+  }
+  // 等待 dock 可见(上传图片后)再应用;尺寸变化时重新应用
+  (function wait() {
+    if (!apply()) { setTimeout(wait, 400); }
+  })();
+  var rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(apply, 200);
+  });
+})();
+</script>
 
 <div class="toast" id="toast" role="status"></div>
 
