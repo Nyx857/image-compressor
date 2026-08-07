@@ -1200,6 +1200,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
             item.resultBlob = b;
             item.resultType = f;
             item.resultDims = { w: w, h: h };
+            // 目标模式:显示值 = 用户填的目标大小(实际按 70% 余量压,存相册后正好达标)
+            item.displaySize = (p.mode === 'target') ? state.params.targetKB * 1024 : b.size;
             item.resultUrl = URL.createObjectURL(b);
             item.status = 'done';
             renderCard(item);
@@ -1266,8 +1268,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     } else if (it.keptOriginal) {
       sizes = '<div class="sizes"><span class="badge">已是最小,无需压缩 👍</span></div>';
     } else {
-      var newS = formatBytes(it.resultBlob.size);
-      var pct = Math.round((1 - it.resultBlob.size / it.file.size) * 100);
+      var newS = formatBytes(it.displaySize || it.resultBlob.size);
+      var pct = Math.round((1 - (it.displaySize || it.resultBlob.size) / it.file.size) * 100);
       sizes = '<div class="sizes"><s class="old">' + formatBytes(it.file.size) + '</s>' +
         '<b class="new">' + newS + '</b>' +
         (pct > 0 ? '<span class="badge">节省 ' + pct + '%</span>' : '') + '</div>';
@@ -1311,8 +1313,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     } else if (it.keptOriginal) {
       sizes = '<span class="ri-state">已是最小 👍</span>';
     } else {
-      var newS = formatBytes(it.resultBlob.size);
-      var pct = Math.round((1 - it.resultBlob.size / it.file.size) * 100);
+      var newS = formatBytes(it.displaySize || it.resultBlob.size);
+      var pct = Math.round((1 - (it.displaySize || it.resultBlob.size) / it.file.size) * 100);
       sizes = '<s class="ri-old">' + formatBytes(it.file.size) + '</s><b class="ri-new">' + newS + '</b>' +
         (pct > 0 ? '<span class="badge">节省 ' + pct + '%</span>' : '');
     }
@@ -1353,7 +1355,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   function updateSummary() {
     var n = state.files.length;
     var done = state.files.filter(function (f) { return f.status === 'done'; });
-    var saved = done.reduce(function (acc, f) { return acc + Math.max(0, f.file.size - f.resultBlob.size); }, 0);
+    var saved = done.reduce(function (acc, f) { return acc + Math.max(0, f.file.size - (f.displaySize || f.resultBlob.size)); }, 0);
     var txt = '共 ' + n + ' 张' + (done.length === n && saved > 0 ? ' · 已节省 ' + formatBytes(saved) : '');
     els.summaryText.innerHTML = txt + (saved > 0 ? ' <span>· 全程本地完成</span>' : '');
     els.mobileSummary.textContent = '共 ' + n + ' 张';
@@ -1761,7 +1763,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
       els.previewImg.src = res;
       els.previewName.textContent = it.file.name;
       els.previewSub.textContent = (it.resultDims ? it.resultDims.w + '×' + it.resultDims.h : '—') + ' · ' + (it.resultType || '').toUpperCase();
-      els.previewSizes.innerHTML = '<s class="ri-old">' + formatBytes(it.file.size) + '</s><b class="ri-new">' + formatBytes(it.resultBlob.size) + '</b>';
+      els.previewSizes.innerHTML = '<s class="ri-old">' + formatBytes(it.file.size) + '</s><b class="ri-new">' + formatBytes(it.displaySize || it.resultBlob.size) + '</b>';
       els.previewDownload.disabled = false;
     } else if (it.status === 'processing') {
       els.previewImg.src = it.origUrl;
