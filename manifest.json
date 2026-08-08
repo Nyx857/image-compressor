@@ -1,0 +1,16 @@
+{
+  "name": "图小 · 在线图片压缩",
+  "short_name": "图小",
+  "description": "压缩图片、改尺寸、转格式,全程本地完成,不上传任何服务器。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf7f5",
+  "theme_color": "#e0556e",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

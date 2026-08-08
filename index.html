@@ -6,7 +6,13 @@
 <meta name="theme-color" content="#faf7f5">
 <meta name="description" content="图小 — 在线图片压缩工具。压缩、改尺寸、转格式全部在浏览器本地完成,不上传任何图片。">
 <title>图小 · 在线图片压缩</title>
+<link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23e0556e'/%3E%3Cpath d='M18 40 L32 26 L46 40' stroke='white' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M18 24 L32 38 L46 24' stroke='white' stroke-opacity='.45' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="图小">
 <style>
 /* ─────────────────────────────────────────────────────────────────────
  * Warm Coral — low-saturation, approachable Airbnb-style token set.
@@ -614,13 +620,14 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   .foot { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
   /* 手机端:不需要拖拽/粘贴快捷键提示(那是桌面交互) */
   .drop .hint { display: none; }
-  /* 隐私行:锁图标不缩放,文字换行正常,整体居中 */
+  /* 隐私行:锁图标顶对齐第一行文字(不随整体垂直居中),文字换行正常,整体居中 */
   .drop .privacy {
     justify-content: center;
     font-size: 13px;
     line-height: 1.6;
+    align-items: flex-start;
   }
-  .drop .privacy svg { flex: none; }
+  .drop .privacy svg { flex: none; margin-top: 3px; }
 }
 
 @media (max-width: 599px) {
@@ -635,6 +642,28 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   .brand-name { font-size: var(--text-lg); }
   .brand-name em { display: none; }
 }
+/* ─── 添加主屏幕引导 ─────────────────────────────────────────── */
+.install-hint {
+  position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom));
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+  box-shadow: 0 10px 34px rgba(38,34,31,.16); padding: 16px 16px 14px;
+  z-index: 999; display: none; max-width: 420px; margin: 0 auto;
+}
+.install-hint.show { display: block; animation: hintUp .3s ease; }
+@keyframes hintUp { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+.install-hint .ih-head { display: flex; align-items: center; gap: 10px; }
+.install-hint .ih-logo { width: 38px; height: 38px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; font-size: 20px; background: var(--accent); color: #fff; }
+.install-hint .ih-title { font-size: 15px; font-weight: 700; color: var(--fg); }
+.install-hint .ih-close { margin-left: auto; border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1; padding: 6px; cursor: pointer; border-radius: 8px; }
+.install-hint .ih-close:active { background: var(--surface-warm); }
+.install-hint .ih-body { font-size: 13px; color: var(--fg-2); line-height: 1.65; margin: 10px 2px 0; }
+.install-hint .ih-body b { color: var(--fg); }
+.install-hint .ih-actions { display: flex; gap: 8px; margin-top: 12px; }
+.install-hint .ih-btn { flex: 1; border: 0; border-radius: 12px; padding: 11px 0; font-size: 14px; font-weight: 600; cursor: pointer; }
+.install-hint .ih-btn.primary { background: var(--accent); color: #fff; }
+.install-hint .ih-btn.ghost { background: var(--surface-warm); color: var(--fg); }
+.install-hint .ih-btn:active { opacity: .85; }
+@media (min-width: 1128px) { .install-hint { display: none !important; } }
 </style>
 </head>
 <body>
@@ -1891,6 +1920,95 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   buildPresets();
   syncQualityFill();
   showEmpty();
+})();
+</script>
+<script>
+  // PWA:注册 Service Worker(离线可用 + 安装提示)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* 静默失败,不影响使用 */ });
+    });
+  }
+</script>
+
+<!-- 添加主屏幕引导(iOS/Android 通用,看一次即关) -->
+<div class="install-hint" id="installHint" role="dialog" aria-label="添加到主屏幕">
+  <div class="ih-head">
+    <span class="ih-logo">🖼️</span>
+    <span class="ih-title" id="ihTitle">把「图小」装成 App</span>
+    <button class="ih-close" id="ihClose" aria-label="关闭提示">✕</button>
+  </div>
+  <div class="ih-body" id="ihBody"></div>
+  <div class="ih-actions" id="ihActions"></div>
+</div>
+
+<script>
+(function () {
+  // 已在 App 模式运行(从主屏幕打开)或已看过提示 → 不再打扰
+  var inApp = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
+    || (navigator.standalone === true);
+  if (inApp) return;
+  try { if (localStorage.getItem('tuxiao_install_hint') === '1') return; } catch (e) {}
+
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isAndroid = /Android/i.test(navigator.userAgent);
+
+  var hint = document.getElementById('installHint');
+  var body = document.getElementById('ihBody');
+  var actions = document.getElementById('ihActions');
+  if (!hint) return;
+
+  // 捕获 Android 原生安装事件(Chrome/Edge 等),能装就直接给安装按钮
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (hint.classList.contains('show')) renderActions();
+  });
+
+  function renderActions() {
+    actions.innerHTML = '';
+    if (deferredPrompt) {
+      var b = document.createElement('button');
+      b.className = 'ih-btn primary';
+      b.textContent = '安装应用';
+      b.addEventListener('click', function () {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function () { close(); });
+      });
+      actions.appendChild(b);
+    }
+    var s = document.createElement('button');
+    s.className = 'ih-btn ' + (deferredPrompt ? 'ghost' : 'primary');
+    s.textContent = deferredPrompt ? '稍后再说' : '知道了';
+    s.addEventListener('click', close);
+    actions.appendChild(s);
+  }
+
+  function renderBody() {
+    if (isIOS) {
+      body.innerHTML = '点底部 <b>Safari 分享按钮</b>(方框+箭头图标),然后选 <b>「添加到主屏幕」</b>,就能像 App 一样全屏使用,还能离线打开。';
+    } else if (isAndroid) {
+      body.innerHTML = '点浏览器右上角 <b>菜单</b>(⋮),选 <b>「添加到桌面」或「安装应用」</b>,就能像 App 一样打开,还支持离线使用。';
+    } else {
+      return; // 桌面端不提示
+    }
+  }
+
+  function close() {
+    hint.classList.remove('show');
+    try { localStorage.setItem('tuxiao_install_hint', '1'); } catch (e) {}
+    document.getElementById('ihClose').removeEventListener('click', close);
+  }
+
+  // 仅移动端、且页面加载稳定后展示
+  if (!isIOS && !isAndroid) return;
+  renderBody();
+  renderActions();
+  document.getElementById('ihClose').addEventListener('click', close);
+  window.addEventListener('load', function () {
+    setTimeout(function () { hint.classList.add('show'); }, 2500);
+  });
 })();
 </script>
 </body>
