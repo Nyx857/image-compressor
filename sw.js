@@ -1,5 +1,5 @@
 /* 图小 PWA Service Worker:离线可用 + 更新时自动清理旧缓存 */
-const CACHE = 'tuxiao-v2';
+const CACHE = 'tuxiao-v3';
 const CORE = [
   './',
   './index.html',

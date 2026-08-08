@@ -642,28 +642,11 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   .brand-name { font-size: var(--text-lg); }
   .brand-name em { display: none; }
 }
-/* ─── 添加主屏幕引导 ─────────────────────────────────────────── */
-.install-hint {
-  position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom));
-  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
-  box-shadow: 0 10px 34px rgba(38,34,31,.16); padding: 16px 16px 14px;
-  z-index: 999; display: none; max-width: 420px; margin: 0 auto;
-}
-.install-hint.show { display: block; animation: hintUp .3s ease; }
-@keyframes hintUp { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
-.install-hint .ih-head { display: flex; align-items: center; gap: 10px; }
-.install-hint .ih-logo { width: 38px; height: 38px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; font-size: 20px; background: var(--accent); color: #fff; }
-.install-hint .ih-title { font-size: 15px; font-weight: 700; color: var(--fg); }
-.install-hint .ih-close { margin-left: auto; border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1; padding: 6px; cursor: pointer; border-radius: 8px; }
-.install-hint .ih-close:active { background: var(--surface-warm); }
-.install-hint .ih-body { font-size: 13px; color: var(--fg-2); line-height: 1.65; margin: 10px 2px 0; }
-.install-hint .ih-body b { color: var(--fg); }
-.install-hint .ih-actions { display: flex; gap: 8px; margin-top: 12px; }
-.install-hint .ih-btn { flex: 1; border: 0; border-radius: 12px; padding: 11px 0; font-size: 14px; font-weight: 600; cursor: pointer; }
-.install-hint .ih-btn.primary { background: var(--accent); color: #fff; }
-.install-hint .ih-btn.ghost { background: var(--surface-warm); color: var(--fg); }
-.install-hint .ih-btn:active { opacity: .85; }
-@media (min-width: 1128px) { .install-hint { display: none !important; } }
+
+/* 工作台空态(清除全部/删除后) */
+.grid-empty { padding: 56px 20px; text-align: center; }
+.grid-empty p { font-size: 15px; font-weight: 600; color: var(--fg-2); }
+.grid-empty .grid-empty-sub { margin-top: 8px; font-size: 13px; font-weight: 400; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -704,7 +687,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
         </div>
         <p class="privacy">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-          你的图片只属于你 —— 关闭页面即消失,不留任何痕迹。
+          你的图片只属于你,关闭页面即消失。
         </p>
       </div>
     </div>
@@ -1412,7 +1395,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   }
 
   function syncApplyHint() {
-    if (state.params.applyAll) { els.applyHint.classList.add('hidden'); return; }
+    if (state.params.applyAll || !selectedItem()) { els.applyHint.classList.add('hidden'); return; }
     var it = selectedItem();
     els.applyHintName.textContent = it ? it.file.name : '—';
     els.applyHint.classList.remove('hidden');
@@ -1424,6 +1407,17 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     els.mobileTabs.classList.remove('hidden');
     els.foot.classList.remove('hidden');
     setTab('images');
+  }
+
+  // 工作台空态:清空/删除后停留工作台,显示空提示(不回封面)
+  function showWorkEmpty() {
+    showWork();
+    els.resultsGrid.innerHTML = '<div class="grid-empty"><p>没有图片了</p><p class="grid-empty-sub">点上方「添加图片」继续压缩</p></div>';
+    els.resultsList.innerHTML = '';
+    els.summaryText.textContent = '共 0 张';
+    els.mobileSummary.textContent = '共 0 张';
+    els.mobileSaved.textContent = '等待处理…';
+    syncApplyHint();
   }
 
   function showEmpty() {
@@ -1478,7 +1472,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     if (it.origUrl) URL.revokeObjectURL(it.origUrl);
     if (it.resultUrl) URL.revokeObjectURL(it.resultUrl);
     if (it.bitmap) it.bitmap.close && it.bitmap.close();
-    if (state.files.length === 0) { showEmpty(); return; }
+    if (state.files.length === 0) { showWorkEmpty(); return; }
     if (!state.files.some(function (f) { return f.selected; })) state.files[0].selected = true;
     renderAll();
     syncApplyHint();
@@ -1491,7 +1485,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
       if (it.bitmap) it.bitmap.close && it.bitmap.close();
     });
     state.files = [];
-    showEmpty();
+    showWorkEmpty();
   }
 
   function filenameFor(it) {
@@ -1931,85 +1925,5 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   }
 </script>
 
-<!-- 添加主屏幕引导(iOS/Android 通用,看一次即关) -->
-<div class="install-hint" id="installHint" role="dialog" aria-label="添加到主屏幕">
-  <div class="ih-head">
-    <span class="ih-logo">🖼️</span>
-    <span class="ih-title" id="ihTitle">把「图小」装成 App</span>
-    <button class="ih-close" id="ihClose" aria-label="关闭提示">✕</button>
-  </div>
-  <div class="ih-body" id="ihBody"></div>
-  <div class="ih-actions" id="ihActions"></div>
-</div>
-
-<script>
-(function () {
-  // 已在 App 模式运行(从主屏幕打开)或已看过提示 → 不再打扰
-  var inApp = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
-    || (navigator.standalone === true);
-  if (inApp) return;
-  try { if (localStorage.getItem('tuxiao_install_hint') === '1') return; } catch (e) {}
-
-  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  var isAndroid = /Android/i.test(navigator.userAgent);
-
-  var hint = document.getElementById('installHint');
-  var body = document.getElementById('ihBody');
-  var actions = document.getElementById('ihActions');
-  if (!hint) return;
-
-  // 捕获 Android 原生安装事件(Chrome/Edge 等),能装就直接给安装按钮
-  var deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', function (e) {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (hint.classList.contains('show')) renderActions();
-  });
-
-  function renderActions() {
-    actions.innerHTML = '';
-    if (deferredPrompt) {
-      var b = document.createElement('button');
-      b.className = 'ih-btn primary';
-      b.textContent = '安装应用';
-      b.addEventListener('click', function () {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(function () { close(); });
-      });
-      actions.appendChild(b);
-    }
-    var s = document.createElement('button');
-    s.className = 'ih-btn ' + (deferredPrompt ? 'ghost' : 'primary');
-    s.textContent = deferredPrompt ? '稍后再说' : '知道了';
-    s.addEventListener('click', close);
-    actions.appendChild(s);
-  }
-
-  function renderBody() {
-    if (isIOS) {
-      body.innerHTML = '点底部 <b>Safari 分享按钮</b>(方框+箭头图标),然后选 <b>「添加到主屏幕」</b>,就能像 App 一样全屏使用,还能离线打开。';
-    } else if (isAndroid) {
-      body.innerHTML = '点浏览器右上角 <b>菜单</b>(⋮),选 <b>「添加到桌面」或「安装应用」</b>,就能像 App 一样打开,还支持离线使用。';
-    } else {
-      return; // 桌面端不提示
-    }
-  }
-
-  function close() {
-    hint.classList.remove('show');
-    try { localStorage.setItem('tuxiao_install_hint', '1'); } catch (e) {}
-    document.getElementById('ihClose').removeEventListener('click', close);
-  }
-
-  // 仅移动端、且页面加载稳定后展示
-  if (!isIOS && !isAndroid) return;
-  renderBody();
-  renderActions();
-  document.getElementById('ihClose').addEventListener('click', close);
-  window.addEventListener('load', function () {
-    setTimeout(function () { hint.classList.add('show'); }, 2500);
-  });
-})();
-</script>
 </body>
 </html>
