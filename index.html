@@ -633,7 +633,9 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
 
 @media (max-width: 599px) {
   .nav { height: 56px; }
-  .stage { min-height: calc(100vh - 56px); }
+  /* 首页内容就一张卡片:不撑满视口、不垂直居中,避免上下留白/空滚动 */
+  .stage { min-height: 0; align-items: flex-start; }
+  .upload-hero { padding: 28px 0 32px; }
   .drop { padding: 40px 20px 36px; }
   .drop-icon { width: 56px; height: 56px; margin-bottom: 20px; }
   .drop-icon svg { width: 24px; height: 24px; }
