@@ -234,6 +234,7 @@ kbd {
   color: var(--muted); background: var(--surface);
   border: 1px solid var(--border); border-radius: var(--radius-pill);
   padding: 5px 12px;
+  white-space: nowrap;
 }
 .drop .privacy {
   margin-top: 24px; display: inline-flex; align-items: center; gap: 7px;
@@ -639,6 +640,9 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
   .drop h1 { font-size: clamp(28px, 6.4vw, 34px); line-height: 1.35; }
   .drop .sub { font-size: 15px; line-height: 1.75; }
   .drop .actions .btn { width: 100%; }
+  /* 格式标签强制一行:缩小间距与内边距 */
+  .drop .formats { flex-wrap: nowrap; gap: 5px; }
+  .fmt-tag { padding: 4px 8px; font-size: 10px; }
   .brand-name { font-size: var(--text-lg); }
   .brand-name em { display: none; }
 }
