@@ -651,6 +651,10 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
 .grid-empty { padding: 56px 20px; text-align: center; }
 .grid-empty p { font-size: 15px; font-weight: 600; color: var(--fg-2); }
 .grid-empty .grid-empty-sub { margin-top: 8px; font-size: 13px; font-weight: 400; color: var(--muted); }
+
+/* 压不到目标时的提示 */
+.warn-note { margin-top: 6px; font-size: 12px; color: var(--warn); line-height: 1.5; }
+.ri-warn { display: block; margin-top: 4px; font-size: 12px; color: var(--warn); }
 </style>
 </head>
 <body>
@@ -1036,43 +1040,56 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     });
   }
 
-  // 目标大小压缩:二分质量逼近 → 仍超则逐级缩尺寸 → 换备用格式
+  // 目标大小压缩:先试原尺寸最高质量(命中即返回)→ 二分质量 → 仍超逐级缩尺寸 → 换备用格式
   // 目标按 70% 压缩,预留 iOS 相册 webp→jpg 转码约 30% 的体积膨胀余量
+  // 返回 { blob, mime, w, h, over:true } —— over=true 表示尽力压到最小仍超目标
   function compressToTarget(canvas, fmt, targetKB) {
     return new Promise(function (resolve) {
       var target = targetKB * 1024 * 0.7;
-      var scaleSteps = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2];
+      var scaleSteps = [1, 0.7, 0.45, 0.25];
       var fmtSeq = [fmt, 'webp'].filter(function (f, i, a) { return a.indexOf(f) === i; });
-      var fi = 0;
-      (function nextFmt() {
-        if (fi >= fmtSeq.length) { resolve(null); return; }
-        var f = fmtSeq[fi++];
-        var si = 0;
-        (function nextScale() {
-          if (si >= scaleSteps.length) { nextFmt(); return; }
-          var sc = scaleSteps[si++];
-          var w = Math.max(2, Math.round(canvas.width * sc));
-          var h = Math.max(2, Math.round(canvas.height * sc));
-          var cv2 = document.createElement('canvas');
-          cv2.width = w; cv2.height = h;
-          var c2 = cv2.getContext('2d');
-          c2.imageSmoothingQuality = 'high';
-          if (f === 'jpg') { c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, w, h); }
-          c2.drawImage(canvas, 0, 0, w, h);
-          (function bin(lo, hi, best, iter) {
-            var mid = (lo + hi) / 2;
-            blobAt(cv2, f, mid).then(function (b) {
-              if (b && (!best || Math.abs(b.size - target) < Math.abs(best.size - target))) best = b;
-              if (iter <= 0) {
-                if (best && best.size <= target) { resolve(best); return; }
-                nextScale(); return;
-              }
-              if (b.size > target) bin(lo, mid, best, iter - 1);
-              else bin(mid, hi, best, iter - 1);
-            });
-          })(0.05, 0.95, null, 5);
+
+      // 快速通道:原尺寸 100% 质量一次编码,达标就直接返回(避免大量二分)
+      blobAt(canvas, fmtSeq[0], 1).then(function (first) {
+        if (first && first.size <= target) {
+          resolve({ blob: first, mime: fmtSeq[0], w: canvas.width, h: canvas.height, over: false });
+          return;
+        }
+
+        var best = null;   // 所有尝试中最小结果(兜底)
+        var src = canvas;  // 当前缩放源:第一级原图,后续级从上一级小图继续缩
+        var fi = 0;
+        (function nextFmt() {
+          if (fi >= fmtSeq.length) { resolve(best ? { blob: best.blob, mime: best.mime, w: best.w, h: best.h, over: true } : null); return; }
+          var f = fmtSeq[fi++];
+          var si = 0;
+          (function nextScale() {
+            if (si >= scaleSteps.length) { nextFmt(); return; }
+            var sc = scaleSteps[si++];
+            var w = Math.max(2, Math.round(canvas.width * sc));
+            var h = Math.max(2, Math.round(canvas.height * sc));
+            var cv2 = document.createElement('canvas');
+            cv2.width = w; cv2.height = h;
+            var c2 = cv2.getContext('2d');
+            c2.imageSmoothingQuality = 'high';
+            if (f === 'jpg') { c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, w, h); }
+            c2.drawImage(src, 0, 0, w, h);
+            src = cv2;  // 下一级从这张小图继续缩,避免反复从原图重绘
+            (function bin(lo, hi, iter) {
+              var mid = (lo + hi) / 2;
+              blobAt(cv2, f, mid).then(function (b) {
+                if (b && (!best || b.size < best.blob.size)) best = { blob: b, mime: f, w: w, h: h };
+                if (iter <= 0) {
+                  if (b && b.size <= target) { resolve({ blob: b, mime: f, w: w, h: h, over: false }); return; }
+                  nextScale(); return;
+                }
+                if (b && b.size > target) bin(lo, mid, iter - 1);
+                else bin(mid, hi, iter - 1);
+              });
+            })(0.05, 0.95, 2);
+          })();
         })();
-      })();
+      });
     });
   }
 
@@ -1134,12 +1151,14 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
     }
     item.status = 'processing';
     item.showOrig = false;
+    item.warn = null;
     renderCard(item);
     PQUEUE.push(function () {
     setTimeout(function () {
       var p = state.params;
       var src = item.bitmap;
       var cv;
+      var targetOver = null;   // 目标模式:compressToTarget 是否尽力仍超目标
       try {
         if (p.sizeMode === 'preset') {
           var s = PRESETS[p.preset];
@@ -1183,7 +1202,11 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
           var want = fmt === 'png'
             ? (hasAlpha(item.file) ? 'png' : 'jpg')
             : (fmt === 'webp' && !hasAlpha(item.file) ? 'jpg' : fmt);
-          blobTask = compressToTarget(cv, want, p.targetKB);
+          targetOver = null;
+          blobTask = compressToTarget(cv, want, p.targetKB).then(function (r) {
+            targetOver = r ? r.over : null;
+            return r ? r.blob : null;
+          });
         } else {
           // 质量模式:自动格式选出的无透明 PNG 改走 JPG(否则滑块无效,PNG 无损)
           if (p.format === 'auto' && fmt === 'png' && !hasAlpha(item.file)) fmt = 'jpg';
@@ -1198,7 +1221,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
             if (real && real !== fmt) fmt = real;
           }
           // 压缩后没变小:兜底转 JPG 再压一次(无透明时);都不行才保留原图
-          var finish = function (b, f, w, h) {
+          var finish = function (b, f, w, h, over) {
             if (b.size >= item.file.size) {
               item.keptOriginal = true;
               item.resultBlob = item.file;
@@ -1207,6 +1230,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
               if (item.resultUrl && item.resultUrl !== item.origUrl) URL.revokeObjectURL(item.resultUrl);
               item.resultUrl = item.origUrl;
               item.status = 'done';
+              item.warn = null;
               renderCard(item);
               updateSummary();
               return;
@@ -1216,8 +1240,14 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
             item.resultBlob = b;
             item.resultType = f;
             item.resultDims = { w: w, h: h };
-            // 目标模式:显示值 = 用户填的目标大小(实际按 70% 余量压,存相册后正好达标)
-            item.displaySize = (p.mode === 'target') ? state.params.targetKB * 1024 : b.size;
+            // 显示实际压缩结果大小(不用假值)
+            item.displaySize = b.size;
+            // 目标模式:压不到目标时给出明确提示
+            if (over) {
+              item.warn = '已尽力压到 ' + formatBytes(b.size) + ',仍超目标 ' + formatBytes(Math.max(0, b.size - p.targetKB * 1024));
+            } else {
+              item.warn = null;
+            }
             item.resultUrl = URL.createObjectURL(b);
             item.status = 'done';
             renderCard(item);
@@ -1231,11 +1261,11 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
             cj.fillStyle = '#ffffff'; cj.fillRect(0, 0, cvj.width, cvj.height);
             cj.drawImage(cv, 0, 0);
             return blobAt(cvj, 'jpg', 0.7).then(function (jb) {
-              if (jb && jb.size < blob.size) finish(jb, 'jpg', cv.width, cv.height);
-              else finish(blob, fmt, cv.width, cv.height);
+              if (jb && jb.size < blob.size) finish(jb, 'jpg', cv.width, cv.height, targetOver);
+              else finish(blob, fmt, cv.width, cv.height, targetOver);
             });
           }
-          finish(blob, fmt, cv.width, cv.height);
+          finish(blob, fmt, cv.width, cv.height, targetOver);
         });
       }).catch(function (err) {
         item.status = 'error';
@@ -1288,7 +1318,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
       var pct = Math.round((1 - (it.displaySize || it.resultBlob.size) / it.file.size) * 100);
       sizes = '<div class="sizes"><s class="old">' + formatBytes(it.file.size) + '</s>' +
         '<b class="new">' + newS + '</b>' +
-        (pct > 0 ? '<span class="badge">节省 ' + pct + '%</span>' : '') + '</div>';
+        (pct > 0 ? '<span class="badge">节省 ' + pct + '%</span>' : '') + '</div>' +
+        (it.warn ? '<p class="warn-note">' + esc(it.warn) + '</p>' : '');
     }
 
     return '<article class="img-card' + (it.selected ? ' selected' : '') + '" data-id="' + it.id + '">' +
@@ -1332,7 +1363,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
       var newS = formatBytes(it.displaySize || it.resultBlob.size);
       var pct = Math.round((1 - (it.displaySize || it.resultBlob.size) / it.file.size) * 100);
       sizes = '<s class="ri-old">' + formatBytes(it.file.size) + '</s><b class="ri-new">' + newS + '</b>' +
-        (pct > 0 ? '<span class="badge">节省 ' + pct + '%</span>' : '');
+        (pct > 0 ? '<span class="badge">节省 ' + pct + '%</span>' : '') +
+        (it.warn ? '<span class="ri-warn">' + esc(it.warn) + '</span>' : '');
     }
 
     return '<div class="row-item' + (it.selected ? ' selected' : '') + '" data-id="' + it.id + '" role="button" tabindex="0" aria-label="' + esc(it.file.name) + '">' +
